@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es2020";
+﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es2020";
 
 export const SUPABASE_URL = "https://wfagftibcjlouxftzevc.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_y3kAiWOXJWjPwHFidUYA1A_inltPpUL";
@@ -7,8 +7,6 @@ export const DRIVER_STATUSES = [
   "\u0441\u043E\u0431\u0438\u0440\u0430\u0435\u0442 \u0432 \u0420\u043E\u0441\u0441\u0438\u0438",
   "\u0432 \u043F\u0443\u0442\u0438",
   "\u043D\u0430 \u0433\u0440\u0430\u043D\u0438\u0446\u0435",
-  "\u0432 \u0422\u0430\u0434\u0436\u0438\u043A\u0438\u0441\u0442\u0430\u043D\u0435",
-  "\u0432 \u0425\u0443\u0434\u0436\u0430\u043D\u0434\u0435",
   "\u0432 \u0428\u0430\u0439\u0434\u043E\u043D\u0435",
   "\u0440\u0430\u0437\u0433\u0440\u0443\u0436\u0430\u0435\u0442",
   "\u043D\u0435 \u043D\u0430 \u0441\u0432\u044F\u0437\u0438",
@@ -119,3 +117,4 @@ export function getDriverIdFromUrl() {
 
   return Number.isInteger(driverId) && driverId > 0 ? driverId : null;
 }
+
