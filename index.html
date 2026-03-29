@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Статусы водителей</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">Грузоперевозки</p>
+        <h1>Статусы 4 водителей</h1>
+        <p class="hero-text">
+          Простая страница для клиентов: кто собирает груз, кто в пути и кто уже
+          прибыл в Шайдон.
+        </p>
+        <div class="hero-actions">
+          <button id="refreshButton" class="button button-primary" type="button">
+            Обновить
+          </button>
+          <a class="button button-secondary" href="./driver.html">
+            Страница водителя
+          </a>
+        </div>
+        <div class="status-legend" aria-label="Легенда свежести">
+          <span class="legend-item">
+            <span class="legend-dot legend-fresh"></span>
+            Меньше 2 часов
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-warning"></span>
+            От 2 до 8 часов
+          </span>
+          <span class="legend-item">
+            <span class="legend-dot legend-stale"></span>
+            Больше 8 часов
+          </span>
+        </div>
+      </header>
+
+      <main>
+        <section class="panel panel-tight">
+          <div class="panel-row">
+            <div>
+              <h2>Текущая информация</h2>
+              <p class="muted">Данные обновляются автоматически раз в 60 секунд.</p>
+            </div>
+            <p id="syncInfo" class="muted">Ожидание загрузки...</p>
+          </div>
+        </section>
+
+        <section id="errorBanner" class="panel panel-error hidden" role="alert"></section>
+
+        <section id="driversGrid" class="drivers-grid" aria-live="polite"></section>
+      </main>
+    </div>
+
+    <template id="driverCardTemplate">
+      <article class="driver-card">
+        <div class="card-top">
+          <div>
+            <p class="driver-number"></p>
+            <h3 class="driver-name"></h3>
+          </div>
+          <span class="freshness-pill"></span>
+        </div>
+        <dl class="driver-meta">
+          <div>
+            <dt>Телефон</dt>
+            <dd class="driver-phone"></dd>
+          </div>
+          <div>
+            <dt>Статус</dt>
+            <dd class="driver-status"></dd>
+          </div>
+          <div>
+            <dt>Местоположение</dt>
+            <dd class="driver-location"></dd>
+          </div>
+          <div>
+            <dt>Последнее обновление</dt>
+            <dd class="driver-updated"></dd>
+          </div>
+          <div>
+            <dt>Собирает в России</dt>
+            <dd class="driver-collecting"></dd>
+          </div>
+        </dl>
+      </article>
+    </template>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

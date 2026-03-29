@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Обновление статуса водителя</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="page-shell page-shell-narrow">
+      <header class="hero hero-compact">
+        <p class="eyebrow">Для водителей</p>
+        <h1>Обновить свой статус</h1>
+        <p class="hero-text">
+          Выберите себя, укажите текущее место и отправьте одно обновление.
+        </p>
+      </header>
+
+      <main>
+        <section id="driverErrorBanner" class="panel panel-error hidden" role="alert"></section>
+
+        <section class="panel">
+          <form id="driverForm" class="driver-form">
+            <label class="field">
+              <span>Водитель</span>
+              <select id="driverSelect" required>
+                <option value="">Выберите себя</option>
+              </select>
+            </label>
+
+            <label class="field">
+              <span>Код доступа</span>
+              <input
+                id="accessCodeInput"
+                type="password"
+                inputmode="numeric"
+                autocomplete="one-time-code"
+                placeholder="Например, 1111"
+                required
+              />
+            </label>
+
+            <label class="field">
+              <span>Статус</span>
+              <select id="statusSelect" required></select>
+            </label>
+
+            <label class="field">
+              <span>Местоположение</span>
+              <input
+                id="locationInput"
+                type="text"
+                placeholder="Например, Казахстан, трасса"
+                maxlength="120"
+                required
+              />
+            </label>
+
+            <div class="geo-panel">
+              <button id="geoButton" class="button button-secondary" type="button">
+                Взять геолокацию
+              </button>
+              <p id="geoStatus" class="muted">
+                Координаты не выбраны. Можно отправить только текстовое место.
+              </p>
+            </div>
+
+            <div class="driver-actions">
+              <button id="submitButton" class="button button-primary button-wide" type="submit">
+                Обновить
+              </button>
+              <a class="button button-secondary" href="./index.html">Открыть клиентскую страницу</a>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel panel-tight">
+          <h2>Последние данные по выбранному водителю</h2>
+          <dl id="driverSnapshot" class="driver-snapshot">
+            <div>
+              <dt>Статус</dt>
+              <dd>Нет данных</dd>
+            </div>
+            <div>
+              <dt>Местоположение</dt>
+              <dd>Нет данных</dd>
+            </div>
+            <div>
+              <dt>Последнее обновление</dt>
+              <dd>Нет данных</dd>
+            </div>
+          </dl>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="./driver.js"></script>
+  </body>
+</html>
