@@ -12,7 +12,8 @@
         <p class="eyebrow">Для водителей</p>
         <h1>Обновить свой статус</h1>
         <p class="hero-text">
-          Выберите себя, укажите текущее место и отправьте одно обновление.
+          Выберите себя, статус и шаблон места. При необходимости текст местоположения
+          можно поправить вручную.
         </p>
       </header>
 
@@ -29,20 +30,13 @@
             </label>
 
             <label class="field">
-              <span>Код доступа</span>
-              <input
-                id="accessCodeInput"
-                type="password"
-                inputmode="numeric"
-                autocomplete="one-time-code"
-                placeholder="Например, 1111"
-                required
-              />
+              <span>Статус</span>
+              <select id="statusSelect" required></select>
             </label>
 
             <label class="field">
-              <span>Статус</span>
-              <select id="statusSelect" required></select>
+              <span>Шаблон места</span>
+              <select id="locationTemplateSelect"></select>
             </label>
 
             <label class="field">
@@ -55,6 +49,10 @@
                 required
               />
             </label>
+
+            <p class="status-template-note muted">
+              По умолчанию: «собирает в России» → ВДНХ, «разгружает» → Есенина 109.
+            </p>
 
             <div class="geo-panel">
               <button id="geoButton" class="button button-secondary" type="button">

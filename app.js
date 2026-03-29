@@ -5,9 +5,15 @@ import {
   assertSupabaseConfigured,
 } from "./supabase.js";
 
+const DRIVER_NAMES = {
+  1: "\u0410\u0445\u043B\u0438\u0434\u0434\u0438\u043D",
+  2: "\u0410\u0441\u043B\u0438\u0434\u0434\u0438\u043D",
+  3: "\u0414\u0436\u0430\u043C\u0448\u0435\u0434",
+  4: "\u042D\u0440\u0430\u0447",
+};
+
 const TEXT = {
   noData: "\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445",
-  driver: "\u0412\u043E\u0434\u0438\u0442\u0435\u043B\u044C",
   noPhone: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D \u043D\u0435 \u0443\u043A\u0430\u0437\u0430\u043D",
   yes: "\u0414\u0430",
   no: "\u041D\u0435\u0442",
@@ -42,6 +48,20 @@ function createValue(value, fallback = TEXT.noData) {
   return value && String(value).trim() ? value : fallback;
 }
 
+function getDriverDisplayName(driver) {
+  const rawName = driver?.name?.trim();
+
+  if (DRIVER_NAMES[driver.number]) {
+    return DRIVER_NAMES[driver.number];
+  }
+
+  if (rawName && !/^Водитель\s+\d+$/i.test(rawName)) {
+    return rawName;
+  }
+
+  return `#${driver.number}`;
+}
+
 function renderDriverCard(driver) {
   const fragment = driverCardTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".driver-card");
@@ -60,8 +80,8 @@ function renderDriverCard(driver) {
   card.dataset.freshness = freshness.tone;
   freshnessPill.dataset.freshness = freshness.tone;
 
-  number.textContent = `${TEXT.driver} ${driver.number}`;
-  name.textContent = createValue(driver.name, `${TEXT.driver} ${driver.number}`);
+  number.textContent = `#${driver.number}`;
+  name.textContent = getDriverDisplayName(driver);
   phone.textContent = createValue(driver.phone, TEXT.noPhone);
   status.textContent = createValue(current?.status);
   location.textContent = createValue(current?.location_text);
