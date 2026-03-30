@@ -8,6 +8,7 @@ import {
 } from "./supabase.js";
 
 const CACHE_KEY = "bor-public-drivers-cache-v1";
+const FILTER_STORAGE_KEY = "bor-public-filter-v1";
 
 const TEXT = {
   noData: "Нет данных",
@@ -33,6 +34,34 @@ const TEXT = {
   warningAlert: "Данные уже не свежие, желательно перепроверить.",
   staleAlert: "Давно не обновлялся. Нужна проверка по водителю.",
   unknownAlert: "Еще нет отметки от водителя.",
+  showAll: "Показаны все водители.",
+  showAttention: "Показаны водители, по которым нужна проверка.",
+  showShaidon: "Показаны только водители в Шайдоне.",
+  showCollecting: "Показаны только водители, которые собирают в России.",
+  emptyFiltered: "По этому фильтру водителей нет.",
+  phoneCall: "Позвонить",
+};
+
+const FILTERS = {
+  all: {
+    info: TEXT.showAll,
+    predicate: () => true,
+  },
+  attention: {
+    info: TEXT.showAttention,
+    predicate: (driver) => {
+      const tone = getFreshness(driver.current_status?.updated_at).tone;
+      return tone === "warning" || tone === "stale" || tone === "unknown";
+    },
+  },
+  shaidon: {
+    info: TEXT.showShaidon,
+    predicate: (driver) => driver.current_status?.status === STATUS_IN_SHAIDON,
+  },
+  collecting: {
+    info: TEXT.showCollecting,
+    predicate: (driver) => Boolean(driver.current_status?.is_collecting_in_russia),
+  },
 };
 
 const refreshButton = document.querySelector("#refreshButton");
@@ -46,8 +75,23 @@ const freshCount = document.querySelector("#freshCount");
 const warningCount = document.querySelector("#warningCount");
 const staleCount = document.querySelector("#staleCount");
 const shaidonCount = document.querySelector("#shaidonCount");
+const filterBar = document.querySelector("#filterBar");
+const filterInfo = document.querySelector("#filterInfo");
+const emptyState = document.querySelector("#emptyState");
+const emptyStateText = document.querySelector("#emptyStateText");
 
 let autoRefreshId = null;
+let allDrivers = [];
+let currentFilter = "all";
+
+function loadSavedFilter() {
+  const saved = localStorage.getItem(FILTER_STORAGE_KEY);
+  return FILTERS[saved] ? saved : "all";
+}
+
+function saveCurrentFilter() {
+  localStorage.setItem(FILTER_STORAGE_KEY, currentFilter);
+}
 
 function setError(message) {
   errorBanner.textContent = message;
@@ -149,16 +193,39 @@ function updateSummary(drivers) {
   shaidonCount.textContent = String(counts.shaidon);
 }
 
+function applyFilter(drivers) {
+  const activeFilter = FILTERS[currentFilter] || FILTERS.all;
+  const filtered = drivers.filter(activeFilter.predicate);
+
+  filterInfo.textContent = activeFilter.info;
+
+  filterBar.querySelectorAll(".filter-button").forEach((button) => {
+    button.classList.toggle("is-active", button.dataset.filter === currentFilter);
+  });
+
+  if (!filtered.length) {
+    driversGrid.innerHTML = "";
+    emptyStateText.textContent = TEXT.emptyFiltered;
+    emptyState.classList.remove("hidden");
+    return [];
+  }
+
+  emptyState.classList.add("hidden");
+  return filtered;
+}
+
 function renderDrivers(drivers) {
   driversGrid.innerHTML = "";
   updateSummary(drivers);
 
-  drivers.forEach((driver) => {
+  const visibleDrivers = applyFilter(drivers);
+
+  visibleDrivers.forEach((driver) => {
     const fragment = driverCardTemplate.content.cloneNode(true);
     const card = fragment.querySelector(".driver-card");
     const number = fragment.querySelector(".driver-number");
     const name = fragment.querySelector(".driver-name");
-    const phone = fragment.querySelector(".driver-phone");
+    const phoneLink = fragment.querySelector(".driver-phone-link");
     const status = fragment.querySelector(".driver-status");
     const locationMain = fragment.querySelector(".driver-location-main");
     const updatedMain = fragment.querySelector(".driver-updated-main");
@@ -171,6 +238,7 @@ function renderDrivers(drivers) {
     const current = driver.current_status;
     const freshness = getFreshness(current?.updated_at);
     const alertText = getAlertText(freshness);
+    const phoneValue = createValue(driver.phone, TEXT.noPhone);
 
     card.dataset.freshness = freshness.tone;
     freshnessPill.dataset.freshness = freshness.tone;
@@ -178,7 +246,7 @@ function renderDrivers(drivers) {
 
     number.textContent = `#${driver.number}`;
     name.textContent = getDriverDisplayName(driver);
-    phone.textContent = createValue(driver.phone, TEXT.noPhone);
+    phoneLink.textContent = phoneValue;
     status.textContent = createValue(current?.status);
     statusChip.textContent = createValue(current?.status);
     locationMain.textContent = createValue(current?.location_text);
@@ -188,6 +256,15 @@ function renderDrivers(drivers) {
     freshnessPill.textContent = freshness.label;
     alert.textContent = alertText;
     alert.classList.remove("hidden");
+
+    if (driver.phone && String(driver.phone).trim()) {
+      const phoneHref = String(driver.phone).replace(/[^+\d]/g, "");
+      phoneLink.href = `tel:${phoneHref}`;
+      phoneLink.setAttribute("aria-label", `${TEXT.phoneCall} ${driver.phone}`);
+    } else {
+      phoneLink.removeAttribute("href");
+      phoneLink.classList.add("is-disabled");
+    }
 
     driversGrid.appendChild(fragment);
   });
@@ -246,14 +323,16 @@ async function loadDrivers() {
       return;
     }
 
-    renderDrivers(drivers);
-    saveDriversCache(drivers);
+    allDrivers = drivers;
+    renderDrivers(allDrivers);
+    saveDriversCache(allDrivers);
     syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(new Date())}`;
   } catch (error) {
     const cached = loadDriversCache();
 
     if (cached?.drivers?.length) {
-      renderDrivers(cached.drivers);
+      allDrivers = cached.drivers;
+      renderDrivers(allDrivers);
       showCacheBanner();
       syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(
         cached.cachedAt
@@ -276,6 +355,18 @@ refreshButton.addEventListener("click", () => {
   loadDrivers();
 });
 
+filterBar.addEventListener("click", (event) => {
+  const button = event.target.closest(".filter-button");
+
+  if (!button) {
+    return;
+  }
+
+  currentFilter = button.dataset.filter || "all";
+  saveCurrentFilter();
+  renderDrivers(allDrivers);
+});
+
 window.addEventListener("online", () => {
   setConnectionBanner();
   loadDrivers();
@@ -286,6 +377,7 @@ window.addEventListener("offline", () => {
 });
 
 setConnectionBanner();
+currentFilter = loadSavedFilter();
 registerServiceWorker();
 loadDrivers();
 startAutoRefresh();

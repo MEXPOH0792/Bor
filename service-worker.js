@@ -1,4 +1,4 @@
-const CACHE_NAME = "bor-static-v4";
+const CACHE_NAME = "bor-static-v6";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
@@ -7,6 +7,9 @@ const STATIC_ASSETS = [
   "./app.js",
   "./driver.js",
   "./supabase.js",
+  "./site.webmanifest",
+  "./icons/icon-192.svg",
+  "./icons/icon-512.svg",
   "./.nojekyll",
 ];
 

@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Обновление статуса водителя</title>
+    <meta name="theme-color" content="#1f6b45" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="BOR" />
+    <link rel="manifest" href="./site.webmanifest" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon-192.svg" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.svg" />
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
@@ -12,12 +19,38 @@
         <p class="eyebrow">Для водителей</p>
         <h1>Обновить свой статус</h1>
         <p class="hero-text">
-          Выберите себя, статус и шаблон места. При необходимости текст местоположения
-          можно поправить вручную.
+          Выберите статус и шаблон места. Если интернет пропадет, обновление будет
+          сохранено на устройстве и отправлено позже.
         </p>
       </header>
 
       <main>
+        <section id="connectionBanner" class="panel panel-warning hidden" role="status"></section>
+
+        <section id="queuePanel" class="panel panel-warning hidden" role="status">
+          <div class="queue-panel-row">
+            <div>
+              <h2>Ожидают отправки</h2>
+              <p id="queueSummary" class="muted">Нет отложенных обновлений.</p>
+            </div>
+            <button id="retryQueueButton" class="button button-secondary" type="button">
+              Отправить сейчас
+            </button>
+          </div>
+        </section>
+
+        <section id="adminPanel" class="panel hidden" aria-live="polite">
+          <div class="panel-row">
+            <div>
+              <h2>Режим координатора</h2>
+              <p class="muted">
+                Здесь можно быстро перейти на личную ссылку любого водителя.
+              </p>
+            </div>
+          </div>
+          <div id="driverLinks" class="admin-links"></div>
+        </section>
+
         <section id="driverErrorBanner" class="panel panel-error hidden" role="alert"></section>
 
         <section class="panel">
@@ -67,6 +100,9 @@
               <button id="submitButton" class="button button-primary button-wide" type="submit">
                 Обновить
               </button>
+              <p id="submitHint" class="submit-hint muted">
+                При слабом интернете обновление сначала сохранится на устройстве.
+              </p>
               <a class="button button-secondary" href="./index.html">Открыть клиентскую страницу</a>
             </div>
           </form>

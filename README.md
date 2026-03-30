@@ -2,10 +2,14 @@
 
 Очень простой статический проект на `HTML + CSS + Vanilla JavaScript` с публикацией на GitHub Pages и хранением данных в Supabase.
 
-Проект состоит из двух страниц:
+Проект сделан под слабый интернет:
 
-- `index.html` — публичная страница для клиентов
-- `driver.html` — страница, где водитель вручную обновляет свой статус
+- страницы кэшируются через service worker
+- публичная страница показывает последние сохраненные данные с устройства, если сеть слабая
+- на странице водителя есть локальная очередь неотправленных обновлений
+- для каждого водителя в очереди хранится только последнее неотправленное обновление
+- черновик формы сохраняется на устройстве
+- если связь пропала, обновление не теряется
 
 ## Структура проекта
 
@@ -16,40 +20,61 @@ styles.css
 app.js
 driver.js
 supabase.js
+service-worker.js
+site.webmanifest
+icons/
 README.md
 .nojekyll
 ```
 
-## Что делает MVP
+## Что делает текущая версия
 
 - показывает 4 карточки водителей на публичной странице
-- выводит имя, телефон, статус, текстовое местоположение и время последнего обновления
+- выводит имя, телефон, статус, местоположение и время последнего обновления
 - подсвечивает свежесть статуса цветом
 - автообновляет публичную страницу раз в 60 секунд
-- позволяет водителю выбрать себя, ввести код доступа, статус и место
-- поддерживает `navigator.geolocation` для сохранения `lat/lon` в базе
-- не показывает координаты клиентам, только хранит их на будущее
+- использует личные ссылки водителей вида `driver.html?driver_number=1`
+- скрывает выбор водителя на личной ссылке
+- не требует кода доступа
+- поддерживает `navigator.geolocation` для сохранения `lat/lon`
+- поддерживает скрытый режим координатора `driver.html?admin=1`
+- кэширует статические файлы и последние данные для слабого интернета
+- сохраняет неотправленные обновления локально и отправляет их позже
+- может устанавливаться на телефон как легкое PWA-приложение
+
+## Водители
+
+- `1` — Ахлиддин
+- `2` — Аслиддин
+- `3` — Джамшед
+- `4` — Эрач
+
+## Шаблоны мест
+
+Общие точки:
+
+- сбор в России — `ВДНХ`
+- разгрузка в России — `Есенина 109`
+- маршрут — `Узбекистон`
+- маршрут — `Казок`
+
+Персональные точки в Шайдоне:
+
+- Ахлиддин — `Гаражи Зариф (кумур фуруш)`
+- Аслиддин — `Се кучаги лаби сой`
+- Джамшед — `Назди Азизхуча`
+- Эрач — `Хонаи Эрач`
 
 ## 1. Как создать проект Supabase
 
-1. Зайдите в [https://supabase.com/](https://supabase.com/) и создайте новый проект.
-2. После создания откройте `Project Settings -> API`.
+1. Зайдите на [https://supabase.com/](https://supabase.com/) и создайте проект.
+2. Откройте `Project Settings -> API`.
 3. Скопируйте:
    - `Project URL`
-   - `anon public key`
-4. Откройте SQL Editor и выполните SQL ниже.
+   - `Publishable key` или `anon public key`
+4. Откройте `SQL Editor` и выполните SQL ниже.
 
-## 2. Как создать таблицы и начальные данные
-
-Ниже SQL для максимально простой структуры.
-
-Особенности решения:
-
-- таблица `drivers` хранит водителей
-- таблица `driver_status` хранит одну текущую запись на водителя
-- поле `driver_id` в `driver_status` сделано `unique`, поэтому статус просто обновляется через `upsert`
-- добавлена таблица `driver_access_codes` для простого кода доступа
-- добавлена RPC-функция `update_driver_status_with_code`, чтобы не давать прямую запись в таблицу через anon key
+## 2. SQL для таблиц и функции обновления
 
 ```sql
 create table if not exists public.drivers (
@@ -71,37 +96,18 @@ create table if not exists public.driver_status (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.driver_access_codes (
-  driver_id bigint primary key references public.drivers(id) on delete cascade,
-  access_code text not null
-);
-
 insert into public.drivers (number, name, phone)
 values
-  (1, 'Водитель 1', '+7 900 000-00-01'),
-  (2, 'Водитель 2', '+7 900 000-00-02'),
-  (3, 'Водитель 3', '+7 900 000-00-03'),
-  (4, 'Водитель 4', '+7 900 000-00-04')
+  (1, 'Ахлиддин', '+7 900 000-00-01'),
+  (2, 'Аслиддин', '+7 900 000-00-02'),
+  (3, 'Джамшед', '+7 900 000-00-03'),
+  (4, 'Эрач', '+7 900 000-00-04')
 on conflict (number) do update set
   name = excluded.name,
   phone = excluded.phone;
 
-insert into public.driver_access_codes (driver_id, access_code)
-select id, code_value
-from (
-  values
-    (1, '1111'),
-    (2, '2222'),
-    (3, '3333'),
-    (4, '4444')
-) as seed(driver_number, code_value)
-join public.drivers d on d.number = seed.driver_number
-on conflict (driver_id) do update set
-  access_code = excluded.access_code;
-
 alter table public.drivers enable row level security;
 alter table public.driver_status enable row level security;
-alter table public.driver_access_codes enable row level security;
 
 drop policy if exists "public read drivers" on public.drivers;
 create policy "public read drivers"
@@ -117,9 +123,8 @@ for select
 to anon, authenticated
 using (true);
 
-create or replace function public.update_driver_status_with_code(
+create or replace function public.update_driver_status_simple(
   p_driver_id bigint,
-  p_access_code text,
   p_status text,
   p_location_text text,
   p_lat double precision default null,
@@ -131,22 +136,7 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-declare
-  existing_code text;
 begin
-  select access_code
-  into existing_code
-  from public.driver_access_codes
-  where driver_id = p_driver_id;
-
-  if existing_code is null then
-    raise exception 'Код доступа для водителя не найден';
-  end if;
-
-  if existing_code <> p_access_code then
-    raise exception 'Неверный код доступа';
-  end if;
-
   insert into public.driver_status (
     driver_id,
     status,
@@ -177,9 +167,8 @@ begin
 end;
 $$;
 
-grant execute on function public.update_driver_status_with_code(
+grant execute on function public.update_driver_status_simple(
   bigint,
-  text,
   text,
   text,
   double precision,
@@ -188,9 +177,9 @@ grant execute on function public.update_driver_status_with_code(
 ) to anon, authenticated;
 ```
 
-## 3. Как вставить URL и anon key в `supabase.js`
+## 3. Как вставить URL и ключ в `supabase.js`
 
-Откройте файл `supabase.js` и замените:
+Откройте [supabase.js](/D:/codex/бор/supabase.js) и замените:
 
 ```js
 export const SUPABASE_URL = "PASTE_YOUR_SUPABASE_URL";
@@ -199,9 +188,12 @@ export const SUPABASE_ANON_KEY = "PASTE_YOUR_SUPABASE_ANON_KEY";
 
 на реальные значения из вашего проекта Supabase.
 
-## 4. Как запустить локально
+Важно:
 
-Статические файлы лучше открывать через локальный сервер, а не напрямую через `file://`.
+- в браузер можно вставлять только `Publishable key` или `anon public key`
+- `service_role` и `secret key` использовать нельзя
+
+## 4. Как запустить локально
 
 Пример для Windows:
 
@@ -213,61 +205,66 @@ py -m http.server 8080
 После этого откройте:
 
 - [http://localhost:8080/index.html](http://localhost:8080/index.html)
-- [http://localhost:8080/driver.html](http://localhost:8080/driver.html)
-
-Важно:
-
-- геолокация обычно работает только на `localhost` или по `https`
-- если открыть HTML-файл напрямую двойным кликом, часть функций браузера может работать нестабильно
+- [http://localhost:8080/driver.html?driver_number=1](http://localhost:8080/driver.html?driver_number=1)
 
 ## 5. Как опубликовать на GitHub Pages
 
-1. Создайте отдельный GitHub-репозиторий.
-2. Загрузите в корень репозитория все файлы из этой папки.
-3. В настройках GitHub откройте `Settings -> Pages`.
-4. Включите публикацию из ветки `main` и папки `/root`.
-5. Дождитесь публикации сайта.
+1. Загрузите все файлы из этой папки в репозиторий.
+2. Откройте `Settings -> Pages`.
+3. Выберите `Deploy from a branch`.
+4. Выберите ветку `main` и папку `/(root)`.
+5. Дождитесь публикации.
 
-После публикации:
+Важно:
 
-- `index.html` станет публичной страницей для клиентов
-- `driver.html` можно отправить водителям как отдельную ссылку
-- можно сразу давать ссылки вида `driver.html?driver_id=1`
+- при изменении `service-worker.js` загрузите и его тоже
+- при первом обновлении PWA лучше загрузить также `site.webmanifest` и папку `icons`
+- после публикации лучше обновить страницу через `Ctrl+F5`
 
-## Минимальная защита
+## 6. Как установить на телефон
 
-В этой версии сделана только очень простая защита:
+После публикации на GitHub Pages:
 
-- у каждого водителя есть короткий код доступа
-- код проверяется в Supabase через RPC-функцию
-- прямую запись в `driver_status` через анонимный ключ проект не использует
+1. Откройте сайт в браузере телефона.
+2. В Chrome нажмите `Добавить на главный экран`.
+3. В Safari нажмите `Поделиться -> На экран Домой`.
+4. После установки сайт будет открываться как отдельное легкое приложение.
 
-Это не полноценная авторизация. Для MVP этого достаточно, но позже лучше добавить:
+Что это дает:
 
-- отдельные одноразовые ссылки или magic link
-- логирование изменений
-- историю статусов
-- отдельные роли пользователей
+- быстрее открыть страницу водителя
+- лучше работает кэш при слабом интернете
+- удобнее держать под рукой личную ссылку или страницу клиента
 
-## Как тестировать
+## Личные ссылки водителей
 
-1. Укажите реальные `SUPABASE_URL` и `SUPABASE_ANON_KEY` в `supabase.js`.
-2. Выполните SQL из раздела выше в Supabase.
-3. Откройте `driver.html`.
-4. Выберите водителя, например `Водитель 1`.
-5. Введите его код, например `1111`.
-6. Выберите статус и напишите местоположение.
-7. Нажмите `Обновить`.
-8. Откройте `index.html` и проверьте карточку.
-9. Проверьте цвет свежести:
-   - меньше 2 часов — зеленый
-   - от 2 до 8 часов — желтый
-   - больше 8 часов — красный
+- Ахлиддин — `driver.html?driver_number=1`
+- Аслиддин — `driver.html?driver_number=2`
+- Джамшед — `driver.html?driver_number=3`
+- Эрач — `driver.html?driver_number=4`
+
+## Скрытый режим координатора
+
+Служебная ссылка:
+
+- `driver.html?admin=1`
+
+Что даёт этот режим:
+
+- можно выбрать любого водителя из списка
+- можно быстро перейти на личную ссылку любого водителя
+- полезно как резервный режим, если водитель сам не может обновиться
+
+## Как работает слабый интернет
+
+- если публичная страница не смогла достучаться до Supabase, она показывает последние сохраненные данные с этого устройства
+- если на странице водителя связь пропала, обновление сохраняется локально
+- когда связь появляется, страница пробует отправить сохраненные данные
+- если водитель несколько раз меняет статус без связи, в локальной очереди остается только его последнее обновление
 
 ## Что осталось упрощенным
 
-- нет полноценной системы авторизации
-- нет истории перемещений, хранится только один текущий статус
-- нет карты и live tracking
-- нет push-обновлений, только ручная кнопка и обновление раз в 60 секунд
-- коды доступа простые и подходят только для первой версии
+- нет полноценной авторизации
+- нет истории всех статусов
+- нет карт и live tracking
+- локальная очередь и кэш привязаны к конкретному телефону или браузеру

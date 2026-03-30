@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" role="img" aria-label="BOR">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1f6b45" />
+      <stop offset="100%" stop-color="#184f34" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="40" fill="url(#bg)" />
+  <circle cx="48" cy="150" r="16" fill="#eef3eb" opacity="0.95" />
+  <circle cx="144" cy="150" r="16" fill="#eef3eb" opacity="0.95" />
+  <path d="M44 124h104l-10-38H54z" fill="#eef3eb" opacity="0.92" />
+  <text x="96" y="88" text-anchor="middle" font-size="48" font-family="Segoe UI, Arial, sans-serif" font-weight="800" fill="#eef3eb">BOR</text>
+</svg>
