@@ -10,10 +10,10 @@
     <div class="page-shell">
       <header class="hero">
         <p class="eyebrow">Грузоперевозки</p>
-        <h1>Статусы 4 водителей</h1>
+        <h1>Где сейчас водители</h1>
         <p class="hero-text">
-          Простая страница для клиентов: кто собирает груз, кто в пути и кто уже
-          прибыл в Шайдон.
+          Страница для клиента: последнее место, статус и время последнего обновления
+          по каждому водителю.
         </p>
         <div class="hero-actions">
           <button id="refreshButton" class="button button-primary" type="button">
@@ -40,13 +40,34 @@
       </header>
 
       <main>
+        <section id="connectionBanner" class="panel panel-warning hidden" role="status"></section>
+        <section id="cacheBanner" class="panel panel-warning hidden" role="status"></section>
+
         <section class="panel panel-tight">
           <div class="panel-row">
             <div>
-              <h2>Текущая информация</h2>
-              <p class="muted">Данные обновляются автоматически раз в 60 секунд.</p>
+              <h2>Сводка по водителям</h2>
+              <p class="muted">Сначала смотрите место и время обновления, затем статус.</p>
             </div>
             <p id="syncInfo" class="muted">Ожидание загрузки...</p>
+          </div>
+          <div id="summaryGrid" class="summary-grid" aria-live="polite">
+            <article class="summary-card">
+              <span class="summary-label">Свежие</span>
+              <strong id="freshCount" class="summary-value">0</strong>
+            </article>
+            <article class="summary-card">
+              <span class="summary-label">Нужно проверить</span>
+              <strong id="warningCount" class="summary-value">0</strong>
+            </article>
+            <article class="summary-card">
+              <span class="summary-label">Давно без обновления</span>
+              <strong id="staleCount" class="summary-value">0</strong>
+            </article>
+            <article class="summary-card">
+              <span class="summary-label">В Шайдоне</span>
+              <strong id="shaidonCount" class="summary-value">0</strong>
+            </article>
           </div>
         </section>
 
@@ -63,8 +84,27 @@
             <p class="driver-number"></p>
             <h3 class="driver-name"></h3>
           </div>
-          <span class="freshness-pill"></span>
+          <div class="card-badges">
+            <span class="status-chip"></span>
+            <span class="freshness-pill"></span>
+          </div>
         </div>
+
+        <div class="driver-priority">
+          <p class="driver-priority-label">Последнее место</p>
+          <p class="driver-location-main"></p>
+        </div>
+
+        <div class="driver-update-row">
+          <div>
+            <p class="driver-priority-label">Последнее обновление</p>
+            <p class="driver-updated-main"></p>
+          </div>
+          <p class="driver-age-note"></p>
+        </div>
+
+        <p class="driver-alert hidden"></p>
+
         <dl class="driver-meta">
           <div>
             <dt>Телефон</dt>
@@ -73,14 +113,6 @@
           <div>
             <dt>Статус</dt>
             <dd class="driver-status"></dd>
-          </div>
-          <div>
-            <dt>Местоположение</dt>
-            <dd class="driver-location"></dd>
-          </div>
-          <div>
-            <dt>Последнее обновление</dt>
-            <dd class="driver-updated"></dd>
           </div>
           <div>
             <dt>Собирает в России</dt>

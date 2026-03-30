@@ -1,36 +1,51 @@
 import {
+  STATUS_IN_SHAIDON,
+  assertSupabaseConfigured,
   fetchDrivers,
   formatDateTime,
+  getDriverDisplayName,
   getFreshness,
-  assertSupabaseConfigured,
 } from "./supabase.js";
 
-const DRIVER_NAMES = {
-  1: "\u0410\u0445\u043B\u0438\u0434\u0434\u0438\u043D",
-  2: "\u0410\u0441\u043B\u0438\u0434\u0434\u0438\u043D",
-  3: "\u0414\u0436\u0430\u043C\u0448\u0435\u0434",
-  4: "\u042D\u0440\u0430\u0447",
-};
+const CACHE_KEY = "bor-public-drivers-cache-v1";
 
 const TEXT = {
-  noData: "\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445",
-  noPhone: "\u0422\u0435\u043B\u0435\u0444\u043E\u043D \u043D\u0435 \u0443\u043A\u0430\u0437\u0430\u043D",
-  yes: "\u0414\u0430",
-  no: "\u041D\u0435\u0442",
-  loading: "\u0417\u0430\u0433\u0440\u0443\u0437\u043A\u0430...",
-  emptyDrivers: "\u0412 \u0431\u0430\u0437\u0435 \u043F\u043E\u043A\u0430 \u043D\u0435\u0442 \u0430\u043A\u0442\u0438\u0432\u043D\u044B\u0445 \u0432\u043E\u0434\u0438\u0442\u0435\u043B\u0435\u0439.",
-  empty: "\u041F\u0443\u0441\u0442\u043E",
-  lastCheck: "\u041F\u043E\u0441\u043B\u0435\u0434\u043D\u044F\u044F \u043F\u0440\u043E\u0432\u0435\u0440\u043A\u0430",
-  loadError:
-    "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0434\u0430\u043D\u043D\u044B\u0435 \u0438\u0437 Supabase.",
-  loadErrorShort: "\u041E\u0448\u0438\u0431\u043A\u0430 \u0437\u0430\u0433\u0440\u0443\u0437\u043A\u0438",
+  noData: "Нет данных",
+  noPhone: "Телефон не указан",
+  yes: "Да",
+  no: "Нет",
+  loading: "Загрузка...",
+  emptyDrivers: "В базе пока нет активных водителей.",
+  empty: "Пусто",
+  lastCheck: "Последняя проверка",
+  loadError: "Не удалось загрузить данные из Supabase.",
+  loadErrorShort: "Ошибка загрузки",
+  offlineBanner:
+    "Связь слабая или отсутствует. Если загрузка не пройдет, будут показаны последние сохраненные данные с устройства.",
+  onlineBanner: "Связь есть. Страница обновляется автоматически.",
+  cachedData:
+    "Сейчас показаны последние сохраненные данные с этого устройства.",
+  justNow: "Только что",
+  minutesAgo: "мин назад",
+  hoursAgo: "ч назад",
+  dayAgo: "более суток назад",
+  freshAlert: "Данные свежие.",
+  warningAlert: "Данные уже не свежие, желательно перепроверить.",
+  staleAlert: "Давно не обновлялся. Нужна проверка по водителю.",
+  unknownAlert: "Еще нет отметки от водителя.",
 };
 
 const refreshButton = document.querySelector("#refreshButton");
 const driversGrid = document.querySelector("#driversGrid");
 const syncInfo = document.querySelector("#syncInfo");
 const errorBanner = document.querySelector("#errorBanner");
+const connectionBanner = document.querySelector("#connectionBanner");
+const cacheBanner = document.querySelector("#cacheBanner");
 const driverCardTemplate = document.querySelector("#driverCardTemplate");
+const freshCount = document.querySelector("#freshCount");
+const warningCount = document.querySelector("#warningCount");
+const staleCount = document.querySelector("#staleCount");
+const shaidonCount = document.querySelector("#shaidonCount");
 
 let autoRefreshId = null;
 
@@ -44,52 +59,174 @@ function clearError() {
   errorBanner.classList.add("hidden");
 }
 
+function setConnectionBanner() {
+  connectionBanner.textContent = navigator.onLine
+    ? TEXT.onlineBanner
+    : TEXT.offlineBanner;
+  connectionBanner.classList.remove("hidden");
+}
+
+function showCacheBanner(message = TEXT.cachedData) {
+  cacheBanner.textContent = message;
+  cacheBanner.classList.remove("hidden");
+}
+
+function hideCacheBanner() {
+  cacheBanner.textContent = "";
+  cacheBanner.classList.add("hidden");
+}
+
 function createValue(value, fallback = TEXT.noData) {
   return value && String(value).trim() ? value : fallback;
 }
 
-function getDriverDisplayName(driver) {
-  const rawName = driver?.name?.trim();
-
-  if (DRIVER_NAMES[driver.number]) {
-    return DRIVER_NAMES[driver.number];
+function getRelativeAgeLabel(updatedAt, freshness) {
+  if (!updatedAt || !Number.isFinite(freshness.hours)) {
+    return TEXT.unknownAlert;
   }
 
-  if (rawName && !/^Водитель\s+\d+$/i.test(rawName)) {
-    return rawName;
+  const minutes = Math.round(freshness.hours * 60);
+
+  if (minutes < 2) {
+    return TEXT.justNow;
   }
 
-  return `#${driver.number}`;
+  if (minutes < 60) {
+    return `${minutes} ${TEXT.minutesAgo}`;
+  }
+
+  if (freshness.hours < 24) {
+    return `${Math.round(freshness.hours)} ${TEXT.hoursAgo}`;
+  }
+
+  return TEXT.dayAgo;
 }
 
-function renderDriverCard(driver) {
-  const fragment = driverCardTemplate.content.cloneNode(true);
-  const card = fragment.querySelector(".driver-card");
-  const number = fragment.querySelector(".driver-number");
-  const name = fragment.querySelector(".driver-name");
-  const phone = fragment.querySelector(".driver-phone");
-  const status = fragment.querySelector(".driver-status");
-  const location = fragment.querySelector(".driver-location");
-  const updated = fragment.querySelector(".driver-updated");
-  const collecting = fragment.querySelector(".driver-collecting");
-  const freshnessPill = fragment.querySelector(".freshness-pill");
+function getAlertText(freshness) {
+  if (freshness.tone === "fresh") {
+    return TEXT.freshAlert;
+  }
 
-  const current = driver.current_status;
-  const freshness = getFreshness(current?.updated_at);
+  if (freshness.tone === "warning") {
+    return TEXT.warningAlert;
+  }
 
-  card.dataset.freshness = freshness.tone;
-  freshnessPill.dataset.freshness = freshness.tone;
+  if (freshness.tone === "stale") {
+    return TEXT.staleAlert;
+  }
 
-  number.textContent = `#${driver.number}`;
-  name.textContent = getDriverDisplayName(driver);
-  phone.textContent = createValue(driver.phone, TEXT.noPhone);
-  status.textContent = createValue(current?.status);
-  location.textContent = createValue(current?.location_text);
-  updated.textContent = formatDateTime(current?.updated_at);
-  collecting.textContent = current?.is_collecting_in_russia ? TEXT.yes : TEXT.no;
-  freshnessPill.textContent = freshness.label;
+  return TEXT.unknownAlert;
+}
 
-  return fragment;
+function updateSummary(drivers) {
+  const counts = {
+    fresh: 0,
+    warning: 0,
+    stale: 0,
+    shaidon: 0,
+  };
+
+  drivers.forEach((driver) => {
+    const current = driver.current_status;
+    const freshness = getFreshness(current?.updated_at);
+
+    if (freshness.tone === "fresh") {
+      counts.fresh += 1;
+    } else if (freshness.tone === "warning") {
+      counts.warning += 1;
+    } else {
+      counts.stale += 1;
+    }
+
+    if (current?.status === STATUS_IN_SHAIDON) {
+      counts.shaidon += 1;
+    }
+  });
+
+  freshCount.textContent = String(counts.fresh);
+  warningCount.textContent = String(counts.warning);
+  staleCount.textContent = String(counts.stale);
+  shaidonCount.textContent = String(counts.shaidon);
+}
+
+function renderDrivers(drivers) {
+  driversGrid.innerHTML = "";
+  updateSummary(drivers);
+
+  drivers.forEach((driver) => {
+    const fragment = driverCardTemplate.content.cloneNode(true);
+    const card = fragment.querySelector(".driver-card");
+    const number = fragment.querySelector(".driver-number");
+    const name = fragment.querySelector(".driver-name");
+    const phone = fragment.querySelector(".driver-phone");
+    const status = fragment.querySelector(".driver-status");
+    const locationMain = fragment.querySelector(".driver-location-main");
+    const updatedMain = fragment.querySelector(".driver-updated-main");
+    const collecting = fragment.querySelector(".driver-collecting");
+    const freshnessPill = fragment.querySelector(".freshness-pill");
+    const statusChip = fragment.querySelector(".status-chip");
+    const ageNote = fragment.querySelector(".driver-age-note");
+    const alert = fragment.querySelector(".driver-alert");
+
+    const current = driver.current_status;
+    const freshness = getFreshness(current?.updated_at);
+    const alertText = getAlertText(freshness);
+
+    card.dataset.freshness = freshness.tone;
+    freshnessPill.dataset.freshness = freshness.tone;
+    statusChip.dataset.freshness = freshness.tone;
+
+    number.textContent = `#${driver.number}`;
+    name.textContent = getDriverDisplayName(driver);
+    phone.textContent = createValue(driver.phone, TEXT.noPhone);
+    status.textContent = createValue(current?.status);
+    statusChip.textContent = createValue(current?.status);
+    locationMain.textContent = createValue(current?.location_text);
+    updatedMain.textContent = formatDateTime(current?.updated_at);
+    ageNote.textContent = getRelativeAgeLabel(current?.updated_at, freshness);
+    collecting.textContent = current?.is_collecting_in_russia ? TEXT.yes : TEXT.no;
+    freshnessPill.textContent = freshness.label;
+    alert.textContent = alertText;
+    alert.classList.remove("hidden");
+
+    driversGrid.appendChild(fragment);
+  });
+}
+
+function saveDriversCache(drivers) {
+  localStorage.setItem(
+    CACHE_KEY,
+    JSON.stringify({
+      cachedAt: new Date().toISOString(),
+      drivers,
+    })
+  );
+}
+
+function loadDriversCache() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+
+  try {
+    await navigator.serviceWorker.register("./service-worker.js");
+  } catch {
+    // No-op: app should still work without service worker.
+  }
 }
 
 async function loadDrivers() {
@@ -99,9 +236,9 @@ async function loadDrivers() {
   try {
     assertSupabaseConfigured();
     clearError();
+    hideCacheBanner();
 
     const drivers = await fetchDrivers();
-    driversGrid.innerHTML = "";
 
     if (drivers.length === 0) {
       setError(TEXT.emptyDrivers);
@@ -109,14 +246,23 @@ async function loadDrivers() {
       return;
     }
 
-    drivers.forEach((driver) => {
-      driversGrid.appendChild(renderDriverCard(driver));
-    });
-
+    renderDrivers(drivers);
+    saveDriversCache(drivers);
     syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(new Date())}`;
   } catch (error) {
-    setError(error.message || TEXT.loadError);
-    syncInfo.textContent = TEXT.loadErrorShort;
+    const cached = loadDriversCache();
+
+    if (cached?.drivers?.length) {
+      renderDrivers(cached.drivers);
+      showCacheBanner();
+      syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(
+        cached.cachedAt
+      )}`;
+      setError(error.message || TEXT.loadError);
+    } else {
+      setError(error.message || TEXT.loadError);
+      syncInfo.textContent = TEXT.loadErrorShort;
+    }
   } finally {
     refreshButton.disabled = false;
   }
@@ -130,6 +276,17 @@ refreshButton.addEventListener("click", () => {
   loadDrivers();
 });
 
+window.addEventListener("online", () => {
+  setConnectionBanner();
+  loadDrivers();
+});
+
+window.addEventListener("offline", () => {
+  setConnectionBanner();
+});
+
+setConnectionBanner();
+registerServiceWorker();
 loadDrivers();
 startAutoRefresh();
 
