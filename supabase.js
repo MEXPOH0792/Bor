@@ -26,19 +26,23 @@ export const ROUTE_POINTS = ["Узбекистон", "Казок"];
 export const DRIVER_PROFILES = {
   1: {
     name: "Ахлиддин",
-    shaidonPoint: "Гаражи Зариф (кумур фуруш)",
+    shaidonCollectPoint: "Зарифи кумур фуруш",
+    shaidonUnloadPoint: "Бозори кухна",
   },
   2: {
     name: "Аслиддин",
-    shaidonPoint: "Се кучаги лаби сой",
+    shaidonCollectPoint: "Се кучаги лаби сой",
+    shaidonUnloadPoint: "Се кучаги лаби сой",
   },
   3: {
     name: "Джамшед",
-    shaidonPoint: "Назди Азизхуча",
+    shaidonCollectPoint: "Назди Азизхуча",
+    shaidonUnloadPoint: "Назди Азизхуча",
   },
   4: {
     name: "Эрач",
-    shaidonPoint: "Хонаи Эрач",
+    shaidonCollectPoint: "Хонаи Эрач",
+    shaidonUnloadPoint: "Хонаи Эрач",
   },
 };
 
@@ -106,10 +110,15 @@ export function getLocationTemplateGroups(driver) {
     },
   ];
 
-  if (profile?.shaidonPoint) {
+  const shaidonOptions = [
+    profile?.shaidonCollectPoint,
+    profile?.shaidonUnloadPoint,
+  ].filter(Boolean);
+
+  if (shaidonOptions.length) {
     groups.push({
-      label: "Шайдон / точка водителя",
-      options: [profile.shaidonPoint],
+      label: "Шайдон / точки водителя",
+      options: Array.from(new Set(shaidonOptions)),
     });
   }
 
@@ -124,11 +133,11 @@ export function getDefaultTemplateForStatus(status, driver) {
   }
 
   if (status === STATUS_UNLOADING) {
-    return RUSSIA_UNLOAD_POINT;
+    return profile?.shaidonUnloadPoint ?? RUSSIA_UNLOAD_POINT;
   }
 
   if (status === STATUS_IN_SHAIDON) {
-    return profile?.shaidonPoint ?? "";
+    return profile?.shaidonCollectPoint ?? "";
   }
 
   return "";
@@ -171,10 +180,8 @@ export async function fetchDrivers() {
     supabase
       .from("driver_status")
       .select(
-        "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
-      )
-      .order("updated_at", { ascending: false, nullsFirst: false })
-      .order("id", { ascending: false }),
+        "driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
+      ),
   ]);
 
   if (driversResult.error) {
@@ -185,13 +192,9 @@ export async function fetchDrivers() {
     throw statusesResult.error;
   }
 
-  const statusesByDriverId = new Map();
-
-  for (const item of statusesResult.data ?? []) {
-    if (!statusesByDriverId.has(item.driver_id)) {
-      statusesByDriverId.set(item.driver_id, item);
-    }
-  }
+  const statusesByDriverId = new Map(
+    (statusesResult.data ?? []).map((item) => [item.driver_id, item])
+  );
 
   return (driversResult.data ?? []).map((driver) => ({
     ...driver,
