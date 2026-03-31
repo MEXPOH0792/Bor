@@ -689,3 +689,28 @@ input[type="text"]:focus {
     grid-template-columns: 1fr;
   }
 }
+
+
+.driver-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.driver-contact-actions .button {
+  flex: 1 1 180px;
+  justify-content: center;
+}
+
+.driver-meta {
+  margin-bottom: 0;
+}
+
+.driver-phone-text {
+  color: var(--text);
+}
+
+.field input[type="date"] {
+  min-height: 56px;
+}

@@ -53,6 +53,7 @@ const TEXT = {
   fresh: "Свежо",
   warning: "Нужно обновить",
   stale: "Старое обновление",
+  collectUntilNoDate: "Не указано",
 };
 
 const isConfigured =
@@ -67,6 +68,17 @@ export const supabase = isConfigured
       },
     })
   : null;
+
+
+export function formatCollectUntil(value) {
+  if (!value) {
+    return TEXT.collectUntilNoDate;
+  }
+
+  return new Intl.DateTimeFormat("ru-RU", {
+    dateStyle: "medium",
+  }).format(new Date(value));
+}
 
 export function assertSupabaseConfigured() {
   if (!supabase) {
@@ -172,7 +184,9 @@ export async function fetchDrivers() {
       .order("number", { ascending: true }),
     supabase
       .from("driver_status")
-      .select("id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at")
+      .select(
+        "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at, collect_until_date"
+      )
       .order("updated_at", { ascending: false })
       .order("id", { ascending: false }),
   ]);
@@ -186,6 +200,7 @@ export async function fetchDrivers() {
   }
 
   const statusesByDriverId = new Map();
+
   for (const item of statusesResult.data ?? []) {
     if (!statusesByDriverId.has(item.driver_id)) {
       statusesByDriverId.set(item.driver_id, item);

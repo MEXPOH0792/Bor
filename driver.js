@@ -4,6 +4,7 @@ import {
   assertSupabaseConfigured,
   buildDriverPageLink,
   fetchDrivers,
+  formatCollectUntil,
   formatDateTime,
   getDefaultTemplateForStatus,
   getDriverDisplayName,
@@ -61,6 +62,7 @@ const driverSelect = document.querySelector("#driverSelect");
 const statusSelect = document.querySelector("#statusSelect");
 const locationTemplateSelect = document.querySelector("#locationTemplateSelect");
 const locationInput = document.querySelector("#locationInput");
+const collectUntilInput = document.querySelector("#collectUntilInput");
 const geoButton = document.querySelector("#geoButton");
 const geoStatus = document.querySelector("#geoStatus");
 const submitButton = document.querySelector("#submitButton");
@@ -224,6 +226,7 @@ function saveDraft() {
     status: statusSelect.value,
     locationTemplate: locationTemplateSelect.value,
     locationText: locationInput.value,
+    collectUntilDate: collectUntilInput.value || null,
     lat: selectedCoordinates.lat,
     lon: selectedCoordinates.lon,
     savedAt: new Date().toISOString(),
@@ -267,6 +270,8 @@ function restoreDraft() {
       if (draft.locationText) {
         locationInput.value = draft.locationText;
       }
+
+      collectUntilInput.value = draft.collectUntilDate || "";
 
       selectedCoordinates = {
         lat: draft.lat ?? null,
@@ -476,6 +481,7 @@ function renderSnapshot(driverId) {
     current?.status || TEXT.noData,
     current?.location_text || TEXT.noData,
     formatDateTime(current?.updated_at),
+    formatCollectUntil(current?.collect_until_date),
   ];
 
   snapshot.querySelectorAll("dd").forEach((node, index) => {
@@ -493,9 +499,11 @@ function seedFormForDriver(driver) {
   if (current) {
     statusSelect.value = current.status || STATUS_COLLECTING_IN_RUSSIA;
     locationInput.value = current.location_text || "";
+    collectUntilInput.value = current.collect_until_date || "";
   } else {
     statusSelect.value = STATUS_COLLECTING_IN_RUSSIA;
     locationInput.value = "";
+    collectUntilInput.value = "";
   }
 
   fillTemplateOptions(driver);
@@ -553,6 +561,7 @@ async function flushQueue() {
         p_lat: item.p_lat,
         p_lon: item.p_lon,
         p_is_collecting_in_russia: item.p_is_collecting_in_russia,
+        p_collect_until_date: item.p_collect_until_date,
       });
     } catch {
       remaining.push(item);
@@ -646,6 +655,10 @@ locationInput.addEventListener("input", () => {
   saveDraft();
 });
 
+collectUntilInput.addEventListener("input", () => {
+  saveDraft();
+});
+
 geoButton.addEventListener("click", () => {
   if (!("geolocation" in navigator)) {
     updateGeoStatus(TEXT.geoUnsupported);
@@ -698,6 +711,7 @@ form.addEventListener("submit", async (event) => {
     p_lat: selectedCoordinates.lat,
     p_lon: selectedCoordinates.lon,
     p_is_collecting_in_russia: status === STATUS_COLLECTING_IN_RUSSIA,
+    p_collect_until_date: collectUntilInput.value || null,
   };
 
   if (!driverId) {
