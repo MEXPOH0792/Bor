@@ -6,6 +6,7 @@ import {
   formatDateTime,
   getDriverDisplayName,
   getFreshness,
+  getStatusLabel,
 } from "./supabase.js";
 
 const CACHE_KEY = "bor-public-drivers-cache-v3";
@@ -37,8 +38,8 @@ const TEXT = {
   unknownAlert: "Еще нет отметки от водителя.",
   showAll: "Показаны все водители.",
   showAttention: "Показаны водители, по которым нужна проверка.",
-  showShaidon: "Показаны только водители в Шайдоне.",
-  showCollecting: "Показаны только водители, которые собирают в России.",
+  showShaidon: "Показаны только водители со статусом «дар Шайдон».",
+  showCollecting: "Показаны только водители со статусом «Россиянда бор чам карсос».",
   emptyFiltered: "По этому фильтру водителей нет.",
   phoneCall: "Позвонить",
   whatsappWrite: "Написать в WhatsApp",
@@ -268,9 +269,9 @@ function renderDrivers(drivers) {
     name.textContent = getDriverDisplayName(driver);
     number.textContent = "";
     phoneText.textContent = phoneValue;
-    status.textContent = createValue(current?.status);
+    status.textContent = createValue(getStatusLabel(current?.status));
     collectUntil.textContent = formatCollectUntil(current?.collect_until_date);
-    statusChip.textContent = createValue(current?.status);
+    statusChip.textContent = createValue(getStatusLabel(current?.status));
     locationMain.textContent = createValue(current?.location_text);
     updatedMain.textContent = formatDateTime(current?.updated_at);
     ageNote.textContent = getRelativeAgeLabel(current?.updated_at, freshness);

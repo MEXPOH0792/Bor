@@ -19,6 +19,19 @@ export const DRIVER_STATUSES = [
   STATUS_OFFLINE,
 ];
 
+export const STATUS_LABELS = {
+  [STATUS_COLLECTING_IN_RUSSIA]: "Россиянда бор чам карсос",
+  [STATUS_IN_TRANSIT]: "дар рох",
+  [STATUS_AT_BORDER]: "Границанда",
+  [STATUS_IN_SHAIDON]: "дар Шайдон",
+  [STATUS_UNLOADING]: "бор таксим карсос",
+  [STATUS_OFFLINE]: "не на связи",
+};
+
+export function getStatusLabel(status) {
+  return STATUS_LABELS[status] ?? status ?? "";
+}
+
 export const RUSSIA_COLLECT_POINT = "ВДНХ";
 export const RUSSIA_UNLOAD_POINT = "Есенина 109";
 export const ROUTE_POINTS = ["Узбекистон", "Казок"];
