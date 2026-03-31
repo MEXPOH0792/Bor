@@ -7,7 +7,7 @@ import {
   getFreshness,
 } from "./supabase.js";
 
-const CACHE_KEY = "bor-public-drivers-cache-v3";
+const CACHE_KEY = "bor-public-drivers-cache-v2";
 const FILTER_STORAGE_KEY = "bor-public-filter-v1";
 
 const TEXT = {
@@ -23,7 +23,7 @@ const TEXT = {
   loadErrorShort: "Ошибка загрузки",
   offlineBanner:
     "Связь слабая или отсутствует. Если загрузка не пройдет, будут показаны последние сохраненные данные с устройства.",
-  onlineBanner: "Связь есть. Страница обновляется автоматически.",
+  onlineBanner: "Связь есть. Данные загружаются при открытии страницы, при возврате на вкладку и по кнопке обновления.",
   cachedData:
     "Сейчас показаны последние сохраненные данные с этого устройства.",
   justNow: "Только что",
@@ -80,9 +80,17 @@ const filterInfo = document.querySelector("#filterInfo");
 const emptyState = document.querySelector("#emptyState");
 const emptyStateText = document.querySelector("#emptyStateText");
 
+const AUTO_REFRESH_MS = 180_000;
+const AUTO_REFRESH_JITTER_MS = 30_000;
+const MIN_REQUEST_GAP_MS = 15_000;
+const VISIBLE_REFRESH_COOLDOWN_MS = 45_000;
+
 let autoRefreshId = null;
 let allDrivers = [];
 let currentFilter = "all";
+let loadPromise = null;
+let lastRequestStartedAt = 0;
+let lastSuccessfulLoadAt = 0;
 
 function loadSavedFilter() {
   const saved = localStorage.getItem(FILTER_STORAGE_KEY);
@@ -244,8 +252,8 @@ function renderDrivers(drivers) {
     freshnessPill.dataset.freshness = freshness.tone;
     statusChip.dataset.freshness = freshness.tone;
 
+    number.textContent = `#${driver.number}`;
     name.textContent = getDriverDisplayName(driver);
-    number.textContent = "";
     phoneLink.textContent = phoneValue;
     status.textContent = createValue(current?.status);
     statusChip.textContent = createValue(current?.status);
@@ -294,6 +302,36 @@ function loadDriversCache() {
   }
 }
 
+function renderCachedDriversOnStart() {
+  const cached = loadDriversCache();
+
+  if (!cached?.drivers?.length) {
+    return false;
+  }
+
+  allDrivers = cached.drivers;
+  renderDrivers(allDrivers);
+  showCacheBanner();
+  syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(cached.cachedAt)}`;
+  return true;
+}
+
+function canStartNetworkRequest(force = false) {
+  if (force) {
+    return true;
+  }
+
+  if (document.hidden) {
+    return false;
+  }
+
+  return Date.now() - lastRequestStartedAt >= MIN_REQUEST_GAP_MS;
+}
+
+function shouldRefreshOnReturn() {
+  return Date.now() - lastSuccessfulLoadAt >= VISIBLE_REFRESH_COOLDOWN_MS;
+}
+
 async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
     return;
@@ -306,53 +344,79 @@ async function registerServiceWorker() {
   }
 }
 
-async function loadDrivers() {
-  refreshButton.disabled = true;
-  syncInfo.textContent = TEXT.loading;
+async function loadDrivers(options = {}) {
+  const { force = false, keepSyncInfo = false } = options;
 
-  try {
-    assertSupabaseConfigured();
-    clearError();
-    hideCacheBanner();
-
-    const drivers = await fetchDrivers();
-
-    if (drivers.length === 0) {
-      setError(TEXT.emptyDrivers);
-      syncInfo.textContent = TEXT.empty;
-      return;
-    }
-
-    allDrivers = drivers;
-    renderDrivers(allDrivers);
-    saveDriversCache(allDrivers);
-    syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(new Date())}`;
-  } catch (error) {
-    const cached = loadDriversCache();
-
-    if (cached?.drivers?.length) {
-      allDrivers = cached.drivers;
-      renderDrivers(allDrivers);
-      showCacheBanner();
-      syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(
-        cached.cachedAt
-      )}`;
-      setError(error.message || TEXT.loadError);
-    } else {
-      setError(error.message || TEXT.loadError);
-      syncInfo.textContent = TEXT.loadErrorShort;
-    }
-  } finally {
-    refreshButton.disabled = false;
+  if (loadPromise) {
+    return loadPromise;
   }
+
+  if (!canStartNetworkRequest(force)) {
+    return null;
+  }
+
+  lastRequestStartedAt = Date.now();
+  refreshButton.disabled = true;
+
+  if (!keepSyncInfo) {
+    syncInfo.textContent = TEXT.loading;
+  }
+
+  loadPromise = (async () => {
+    try {
+      assertSupabaseConfigured();
+      clearError();
+      hideCacheBanner();
+
+      const drivers = await fetchDrivers();
+
+      if (drivers.length === 0) {
+        setError(TEXT.emptyDrivers);
+        syncInfo.textContent = TEXT.empty;
+        return;
+      }
+
+      allDrivers = drivers;
+      renderDrivers(allDrivers);
+      saveDriversCache(allDrivers);
+      lastSuccessfulLoadAt = Date.now();
+      syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(new Date())}`;
+    } catch (error) {
+      const cached = loadDriversCache();
+
+      if (cached?.drivers?.length) {
+        allDrivers = cached.drivers;
+        renderDrivers(allDrivers);
+        showCacheBanner();
+        syncInfo.textContent = `${TEXT.lastCheck}: ${formatDateTime(cached.cachedAt)}`;
+        setError(error.message || TEXT.loadError);
+      } else {
+        setError(error.message || TEXT.loadError);
+        syncInfo.textContent = TEXT.loadErrorShort;
+      }
+    } finally {
+      refreshButton.disabled = false;
+      loadPromise = null;
+    }
+  })();
+
+  return loadPromise;
 }
 
 function startAutoRefresh() {
-  autoRefreshId = window.setInterval(loadDrivers, 30_000);
+  const interval = AUTO_REFRESH_MS + Math.floor(Math.random() * AUTO_REFRESH_JITTER_MS);
+
+  autoRefreshId = window.setInterval(() => {
+    if (document.hidden) {
+      return;
+    }
+
+    loadDrivers({ keepSyncInfo: true });
+  }, interval);
 }
 
 refreshButton.addEventListener("click", () => {
-  loadDrivers();
+  loadDrivers({ force: true });
 });
 
 filterBar.addEventListener("click", (event) => {
@@ -369,29 +433,31 @@ filterBar.addEventListener("click", (event) => {
 
 window.addEventListener("online", () => {
   setConnectionBanner();
-  loadDrivers();
+  loadDrivers({ force: true });
 });
 
 window.addEventListener("offline", () => {
   setConnectionBanner();
 });
 
+setConnectionBanner();
+currentFilter = loadSavedFilter();
+registerServiceWorker();
+renderCachedDriversOnStart();
+loadDrivers({ force: true, keepSyncInfo: true });
+startAutoRefresh();
+
 window.addEventListener("visibilitychange", () => {
-  if (document.visibilityState === "visible") {
-    loadDrivers();
+  if (!document.hidden && shouldRefreshOnReturn()) {
+    loadDrivers({ keepSyncInfo: true });
   }
 });
 
 window.addEventListener("focus", () => {
-  loadDrivers();
+  if (shouldRefreshOnReturn()) {
+    loadDrivers({ keepSyncInfo: true });
+  }
 });
-
-
-setConnectionBanner();
-currentFilter = loadSavedFilter();
-registerServiceWorker();
-loadDrivers();
-startAutoRefresh();
 
 window.addEventListener("beforeunload", () => {
   if (autoRefreshId) {
