@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Обновление статуса водителя</title>
-    <meta name="theme-color" content="#1f6b45" />
+    <title>Обновление статуса водителя — BOR</title>
+    <meta name="theme-color" content="#223a5e" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="BOR" />
@@ -17,101 +17,91 @@
   </head>
   <body>
     <div class="page-shell page-shell-narrow">
-      <header class="hero hero-compact">
-        <p class="eyebrow">Для водителей</p>
-        <h1>Обновить свой статус</h1>
-        <p class="hero-text">
-          Выберите статус и шаблон места. Если интернет пропадет, обновление будет
-          сохранено на устройстве и отправлено позже.
-        </p>
+      <header class="topbar">
+        <div>
+          <h1>Управление статусом</h1>
+          <p class="hero-subtitle">Личная ссылка водителя</p>
+        </div>
+        <nav class="topbar-links" aria-label="Навигация">
+          <a href="./index.html">Клиентская страница</a>
+        </nav>
       </header>
 
-      <main>
+      <main class="page-main page-main-compact">
         <section id="connectionBanner" class="panel panel-warning hidden" role="status"></section>
-
         <section id="queuePanel" class="panel panel-warning hidden" role="status">
-          <div class="queue-panel-row">
+          <div class="panel-row">
             <div>
               <h2>Ожидают отправки</h2>
               <p id="queueSummary" class="muted">Нет отложенных обновлений.</p>
             </div>
-            <button id="retryQueueButton" class="button button-secondary" type="button">
+            <button id="retryQueueButton" class="button button-secondary button-small" type="button">
               Отправить сейчас
             </button>
           </div>
         </section>
-
         <section id="adminPanel" class="panel hidden" aria-live="polite">
           <div class="panel-row">
             <div>
               <h2>Режим координатора</h2>
-              <p class="muted">
-                Здесь можно быстро перейти на личную ссылку любого водителя.
-              </p>
+              <p class="muted">Здесь можно быстро перейти на личную ссылку любого водителя.</p>
             </div>
           </div>
           <div id="driverLinks" class="admin-links"></div>
         </section>
-
         <section id="driverErrorBanner" class="panel panel-error hidden" role="alert"></section>
 
-        <section class="panel">
-          <form id="driverForm" class="driver-form">
-            <label class="field">
-              <span>Водитель</span>
-              <select id="driverSelect" required>
-                <option value="">Выберите себя</option>
-              </select>
-            </label>
+        <section class="panel panel-form">
+          <form id="driverForm" class="driver-form driver-form-compact">
+            <div class="form-row">
+              <label class="field field-inline">
+                <span>Водитель</span>
+                <select id="driverSelect" required>
+                  <option value="">Выберите себя</option>
+                </select>
+              </label>
+            </div>
 
-            <label class="field">
-              <span>Статус</span>
-              <select id="statusSelect" required></select>
-            </label>
+            <div class="form-row">
+              <label class="field field-inline">
+                <span>Статус</span>
+                <select id="statusSelect" required></select>
+              </label>
+            </div>
 
-            <label class="field">
-              <span>Шаблон места</span>
-              <select id="locationTemplateSelect"></select>
-            </label>
+            <div class="form-row">
+              <label class="field field-inline">
+                <span>Шаблон места</span>
+                <select id="locationTemplateSelect"></select>
+              </label>
+            </div>
 
-            <label class="field">
-              <span>Местоположение</span>
-              <input
-                id="locationInput"
-                type="text"
-                placeholder="Например, Казахстан, трасса"
-                maxlength="120"
-                required
-              />
-            </label>
+            <div class="form-row">
+              <label class="field field-inline field-grow">
+                <span>Местоположение</span>
+                <input id="locationInput" type="text" placeholder="Например, ВДНХ или Казок" maxlength="120" required />
+              </label>
+            </div>
 
+            <div class="form-actions-inline">
+              <button id="geoButton" class="button button-muted button-small" type="button">Получить геопозицию</button>
+              <p id="geoStatus" class="muted inline-status">Координаты не выбраны.</p>
+            </div>
+
+            <div class="form-submit-row">
+              <button id="submitButton" class="button button-success button-submit" type="submit">Обновить</button>
+            </div>
+            <p id="submitHint" class="submit-hint muted">
+              При слабом интернете обновление сначала сохранится на устройстве.
+            </p>
             <p class="status-template-note muted">
               По умолчанию: «собирает в России» → ВДНХ, «разгружает» → Есенина 109.
             </p>
-
-            <div class="geo-panel">
-              <button id="geoButton" class="button button-secondary" type="button">
-                Взять геолокацию
-              </button>
-              <p id="geoStatus" class="muted">
-                Координаты не выбраны. Можно отправить только текстовое место.
-              </p>
-            </div>
-
-            <div class="driver-actions">
-              <button id="submitButton" class="button button-primary button-wide" type="submit">
-                Обновить
-              </button>
-              <p id="submitHint" class="submit-hint muted">
-                При слабом интернете обновление сначала сохранится на устройстве.
-              </p>
-              <a class="button button-secondary" href="./index.html">Открыть клиентскую страницу</a>
-            </div>
           </form>
         </section>
 
         <section class="panel panel-tight">
-          <h2>Последние данные по выбранному водителю</h2>
+          <h2 class="section-title">Текущие данные</h2>
           <dl id="driverSnapshot" class="driver-snapshot">
             <div>
               <dt>Статус</dt>

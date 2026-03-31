@@ -1,73 +1,61 @@
 import {
   DRIVER_STATUSES,
+  STATUS_COLLECTING_IN_RUSSIA,
   assertSupabaseConfigured,
+  buildDriverPageLink,
   fetchDrivers,
   formatDateTime,
+  getDefaultTemplateForStatus,
+  getDriverDisplayName,
+  getDriverProfile,
+  getLocationTemplateGroups,
+  getRequestedDriverRef,
+  isAdminModeRequested,
   supabase,
 } from "./supabase.js";
 
-const TEXT = {
-  chooseSelf: "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u0435\u0431\u044F",
-  driver: "\u0412\u043E\u0434\u0438\u0442\u0435\u043B\u044C",
-  noData: "\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445",
-  chooseTemplate:
-    "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0448\u0430\u0431\u043B\u043E\u043D",
-  customTemplate: "\u0421\u0432\u043E\u0439 \u0442\u0435\u043A\u0441\u0442",
-  geoUnsupported:
-    "\u0413\u0435\u043E\u043B\u043E\u043A\u0430\u0446\u0438\u044F \u043D\u0435 \u043F\u043E\u0434\u0434\u0435\u0440\u0436\u0438\u0432\u0430\u0435\u0442\u0441\u044F \u0432 \u044D\u0442\u043E\u043C \u0431\u0440\u0430\u0443\u0437\u0435\u0440\u0435.",
-  geoLoading: "\u0417\u0430\u043F\u0440\u0430\u0448\u0438\u0432\u0430\u044E \u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B...",
-  geoSaved: "\u041A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B",
-  geoFailed:
-    "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043F\u043E\u043B\u0443\u0447\u0438\u0442\u044C \u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B. \u041F\u0440\u043E\u0434\u043E\u043B\u0436\u0430\u0439\u0442\u0435 \u0431\u0435\u0437 \u043D\u0438\u0445.",
-  chooseDriver: "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044F.",
-  enterLocation:
-    "\u0412\u0432\u0435\u0434\u0438\u0442\u0435 \u043C\u0435\u0441\u0442\u043E\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u0435 \u0442\u0435\u043A\u0441\u0442\u043E\u043C.",
-  submitting: "\u041E\u0442\u043F\u0440\u0430\u0432\u043A\u0430...",
-  submit: "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C",
-  sentWithGeo:
-    "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E. \u041F\u043E\u0441\u043B\u0435\u0434\u043D\u0438\u0435 \u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442\u044B \u0441\u043E\u0445\u0440\u0430\u043D\u0435\u043D\u044B \u0432 \u0431\u0430\u0437\u0435.",
-  sentWithoutGeo:
-    "\u041E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435 \u043E\u0442\u043F\u0440\u0430\u0432\u043B\u0435\u043D\u043E \u0431\u0435\u0437 \u043A\u043E\u043E\u0440\u0434\u0438\u043D\u0430\u0442.",
-  loadDriversFailed:
-    "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u0437\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044C \u0441\u043F\u0438\u0441\u043E\u043A \u0432\u043E\u0434\u0438\u0442\u0435\u043B\u0435\u0439.",
-  updateFailed:
-    "\u041D\u0435 \u0443\u0434\u0430\u043B\u043E\u0441\u044C \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0442\u0430\u0442\u0443\u0441. \u041F\u0440\u043E\u0432\u0435\u0440\u044C\u0442\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 Supabase.",
-  shaidonPoint:
-    "\u0422\u043E\u0447\u043A\u0430 \u0432 \u0428\u0430\u0439\u0434\u043E\u043D\u0435",
-  routePoint:
-    "\u041E\u0431\u0449\u0438\u0439 \u043C\u0430\u0440\u0448\u0440\u0443\u0442",
-  routeRussia:
-    "\u0420\u043E\u0441\u0441\u0438\u044F: \u0412\u0414\u041D\u0425 \u0438 \u0415\u0441\u0435\u043D\u0438\u043D\u0430 109.",
-};
-
+const QUEUE_KEY = "bor-driver-update-queue-v1";
+const DRAFT_KEY = "bor-driver-draft-v1";
 const CUSTOM_TEMPLATE = "__custom__";
-const COLLECTING_STATUS = DRIVER_STATUSES[0];
-const BORDER_STATUS = DRIVER_STATUSES[2];
-const SHAIDON_STATUS = DRIVER_STATUSES[3];
-const UNLOADING_STATUS = DRIVER_STATUSES[4];
 
-const RUSSIA_COLLECT_POINT = "\u0412\u0414\u041D\u0425";
-const RUSSIA_UNLOAD_POINT = "\u0415\u0441\u0435\u043D\u0438\u043D\u0430 109";
-const ROUTE_POINTS = ["\u0423\u0437\u0431\u0435\u043A\u0438\u0441\u0442\u043E\u043D", "\u041A\u0430\u0437\u043E\u043A"];
-
-const DRIVER_PROFILES = {
-  1: {
-    name: "\u0410\u0445\u043B\u0438\u0434\u0434\u0438\u043D",
-    shaidonPoint:
-      "\u0413\u0430\u0440\u0430\u0436\u0438 \u0417\u0430\u0440\u0438\u0444 (\u043A\u0443\u043C\u0443\u0440 \u0444\u0443\u0440\u0443\u0448)",
-  },
-  2: {
-    name: "\u0410\u0441\u043B\u0438\u0434\u0434\u0438\u043D",
-    shaidonPoint: "\u0421\u0435 \u043A\u0443\u0447\u0430\u0433\u0438 \u043B\u0430\u0431\u0438 \u0441\u043E\u0439",
-  },
-  3: {
-    name: "\u0414\u0436\u0430\u043C\u0448\u0435\u0434",
-    shaidonPoint: "\u041D\u0430\u0437\u0434\u0438 \u0410\u0437\u0438\u0437\u0445\u0443\u0447\u0430",
-  },
-  4: {
-    name: "\u042D\u0440\u0430\u0447",
-    shaidonPoint: "\u0425\u043E\u043D\u0430\u0438 \u042D\u0440\u0430\u0447",
-  },
+const TEXT = {
+  chooseSelf: "Выберите себя",
+  noData: "Нет данных",
+  chooseTemplate: "Выберите шаблон",
+  customTemplate: "Свой текст",
+  geoUnsupported: "Геолокация не поддерживается в этом браузере.",
+  geoLoading: "Запрашиваю координаты...",
+  geoSaved: "Координаты сохранены",
+  geoFailed: "Не удалось получить координаты. Продолжайте без них.",
+  chooseDriver: "Сначала выберите водителя.",
+  enterLocation: "Введите местоположение текстом.",
+  submitting: "Отправка...",
+  submitOnline: "Обновить",
+  submitOffline: "Сохранить на телефоне",
+  sentWithGeo: "Обновление отправлено. Последние координаты сохранены в базе.",
+  sentWithoutGeo: "Обновление отправлено без координат.",
+  savedOffline:
+    "Интернет слабый. Обновление сохранено на устройстве и будет отправлено при появлении связи.",
+  loadDriversFailed: "Не удалось загрузить список водителей.",
+  updateFailed: "Не удалось обновить статус. Проверьте настройки Supabase.",
+  shaidonPoint: "Точка в Шайдоне",
+  routeRussia: "Россия: ВДНХ и Есенина 109.",
+  onlineBanner: "Связь есть. Можно отправлять обновления сразу.",
+  offlineBanner:
+    "Связь слабая или отсутствует. Обновления будут временно сохраняться на устройстве.",
+  queueEmpty: "Нет отложенных обновлений.",
+  queueCount: "Не отправлено обновлений",
+  queueRetrying: "Пробую отправить сохраненные обновления...",
+  draftRestored: "Черновик формы восстановлен с этого устройства.",
+  submitHintOnline: "При слабом интернете обновление сначала сохранится на устройстве.",
+  submitHintOffline: "Сейчас связи нет. Кнопка сохранит обновление на этом телефоне.",
+  coordinatorTitle: "Режим координатора",
+  coordinatorText:
+    "Можно выбрать любого водителя из списка или перейти на его личную ссылку.",
+  personalTitle: "Обновить свой статус",
+  personalText:
+    "Выберите статус и шаблон места. Если интернет пропадет, обновление будет сохранено на устройстве и отправлено позже.",
+  personalLinkLabel: "Личная ссылка",
 };
 
 const form = document.querySelector("#driverForm");
@@ -78,118 +66,29 @@ const locationInput = document.querySelector("#locationInput");
 const geoButton = document.querySelector("#geoButton");
 const geoStatus = document.querySelector("#geoStatus");
 const submitButton = document.querySelector("#submitButton");
+const submitHint = document.querySelector("#submitHint");
+const retryQueueButton = document.querySelector("#retryQueueButton");
+const queuePanel = document.querySelector("#queuePanel");
+const queueSummary = document.querySelector("#queueSummary");
+const connectionBanner = document.querySelector("#connectionBanner");
 const errorBanner = document.querySelector("#driverErrorBanner");
 const snapshot = document.querySelector("#driverSnapshot");
 const heroTitle = document.querySelector("h1");
 const heroText = document.querySelector(".hero-text");
 const driverField = driverSelect.closest(".field");
+const adminPanel = document.querySelector("#adminPanel");
+const driverLinks = document.querySelector("#driverLinks");
+
+const requestedDriverRef = getRequestedDriverRef();
+const isAdminMode = isAdminModeRequested();
 
 let drivers = [];
 let selectedCoordinates = { lat: null, lon: null };
+let queueNote = "";
 
-function getRequestedDriverRef() {
-  const params = new URLSearchParams(window.location.search);
-  const driverId = Number(params.get("driver_id"));
-  const driverNumber = Number(params.get("driver_number") || params.get("driver"));
-
-  if (Number.isInteger(driverNumber) && driverNumber > 0) {
-    return { type: "number", value: driverNumber };
-  }
-
-  if (Number.isInteger(driverId) && driverId > 0) {
-    return { type: "id", value: driverId };
-  }
-
-  return null;
-}
-
-const requestedDriverRef = getRequestedDriverRef();
-
-if (requestedDriverRef) {
+if (requestedDriverRef && !isAdminMode) {
   driverField.classList.add("hidden");
   driverSelect.disabled = true;
-}
-
-function findRequestedDriver() {
-  const ref = requestedDriverRef;
-
-  if (!ref) {
-    return null;
-  }
-
-  if (ref.type === "number") {
-    return drivers.find((driver) => driver.number === ref.value) ?? null;
-  }
-
-  return drivers.find((driver) => driver.id === ref.value) ?? null;
-}
-
-function getDriverProfile(driver) {
-  return driver ? DRIVER_PROFILES[driver.number] ?? null : null;
-}
-
-function getDriverDisplayName(driver) {
-  const profile = getDriverProfile(driver);
-  const rawName = driver?.name?.trim();
-
-  if (profile?.name) {
-    return profile.name;
-  }
-
-  if (rawName && !/^Водитель\s+\d+$/i.test(rawName)) {
-    return rawName;
-  }
-
-  return `${TEXT.driver} ${driver?.number ?? ""}`.trim();
-}
-
-function getSelectedDriver() {
-  return drivers.find((driver) => driver.id === Number(driverSelect.value)) ?? null;
-}
-
-function getLocationTemplateGroups(driver) {
-  const profile = getDriverProfile(driver);
-  const groups = [
-    {
-      label: "\u0420\u043E\u0441\u0441\u0438\u044F",
-      options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT],
-    },
-    {
-      label: "\u041C\u0430\u0440\u0448\u0440\u0443\u0442",
-      options: ROUTE_POINTS,
-    },
-  ];
-
-  if (profile?.shaidonPoint) {
-    groups.push({
-      label: "\u0428\u0430\u0439\u0434\u043E\u043D / \u0442\u043E\u0447\u043A\u0430 \u0432\u043E\u0434\u0438\u0442\u0435\u043B\u044F",
-      options: [profile.shaidonPoint],
-    });
-  }
-
-  return groups;
-}
-
-function getTemplateValues(driver) {
-  return getLocationTemplateGroups(driver).flatMap((group) => group.options);
-}
-
-function getDefaultTemplateForStatus(status, driver) {
-  const profile = getDriverProfile(driver);
-
-  if (status === COLLECTING_STATUS) {
-    return RUSSIA_COLLECT_POINT;
-  }
-
-  if (status === UNLOADING_STATUS) {
-    return RUSSIA_UNLOAD_POINT;
-  }
-
-  if (status === SHAIDON_STATUS) {
-    return profile?.shaidonPoint ?? "";
-  }
-
-  return "";
 }
 
 function setError(message) {
@@ -200,6 +99,218 @@ function setError(message) {
 function clearError() {
   errorBanner.textContent = "";
   errorBanner.classList.add("hidden");
+}
+
+function loadQueue() {
+  try {
+    return JSON.parse(localStorage.getItem(QUEUE_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function saveQueue(queue) {
+  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue));
+}
+
+function setQueueNote(message = "") {
+  queueNote = message;
+  updateQueuePanel();
+}
+
+function updateSubmitUi() {
+  if (!submitButton.disabled) {
+    submitButton.textContent = navigator.onLine ? TEXT.submitOnline : TEXT.submitOffline;
+  }
+
+  submitHint.textContent = navigator.onLine
+    ? TEXT.submitHintOnline
+    : TEXT.submitHintOffline;
+}
+
+function setConnectionBanner() {
+  connectionBanner.textContent = navigator.onLine
+    ? TEXT.onlineBanner
+    : TEXT.offlineBanner;
+  connectionBanner.classList.remove("hidden");
+  updateSubmitUi();
+}
+
+function updateQueuePanel() {
+  const queue = loadQueue();
+
+  if (!queue.length && !queueNote) {
+    queueSummary.textContent = TEXT.queueEmpty;
+    queuePanel.classList.add("hidden");
+    retryQueueButton.disabled = true;
+    retryQueueButton.classList.add("button-muted");
+    return;
+  }
+
+  const summaryParts = [];
+
+  if (queue.length) {
+    const latest = queue[queue.length - 1];
+    summaryParts.push(
+      `${TEXT.queueCount}: ${queue.length}. Последнее сохранение: ${formatDateTime(
+        latest.savedAt
+      )}`
+    );
+  }
+
+  if (queueNote) {
+    summaryParts.unshift(queueNote);
+  }
+
+  queueSummary.textContent = summaryParts.join(" ");
+  queuePanel.classList.remove("hidden");
+  retryQueueButton.disabled = !queue.length || !navigator.onLine;
+  retryQueueButton.classList.toggle("button-muted", retryQueueButton.disabled);
+}
+
+function enqueueUpdate(payload) {
+  const queue = loadQueue();
+  const savedItem = {
+    ...payload,
+    savedAt: new Date().toISOString(),
+  };
+  const existingIndex = queue.findIndex(
+    (item) => item.p_driver_id === payload.p_driver_id
+  );
+
+  if (existingIndex >= 0) {
+    queue[existingIndex] = savedItem;
+  } else {
+    queue.push(savedItem);
+  }
+
+  saveQueue(queue);
+  setQueueNote(TEXT.savedOffline);
+}
+
+function shouldQueueUpdate(error) {
+  const message = String(error?.message || "");
+  return (
+    !navigator.onLine ||
+    /fetch/i.test(message) ||
+    /network/i.test(message) ||
+    /Failed to fetch/i.test(message)
+  );
+}
+
+function getDraftKey(driverRef) {
+  if (driverRef?.type === "number") {
+    return `${DRAFT_KEY}-number-${driverRef.value}`;
+  }
+
+  if (driverRef?.type === "id") {
+    return `${DRAFT_KEY}-id-${driverRef.value}`;
+  }
+
+  return `${DRAFT_KEY}-generic`;
+}
+
+function getActiveDraftKey() {
+  const selectedDriverId = Number(driverSelect.value);
+
+  if (selectedDriverId) {
+    return `${DRAFT_KEY}-driver-${selectedDriverId}`;
+  }
+
+  return getDraftKey(requestedDriverRef);
+}
+
+function saveDraft() {
+  const draft = {
+    driverId: Number(driverSelect.value) || null,
+    status: statusSelect.value,
+    locationTemplate: locationTemplateSelect.value,
+    locationText: locationInput.value,
+    lat: selectedCoordinates.lat,
+    lon: selectedCoordinates.lon,
+    savedAt: new Date().toISOString(),
+  };
+
+  localStorage.setItem(getActiveDraftKey(), JSON.stringify(draft));
+}
+
+function clearDraft() {
+  localStorage.removeItem(getActiveDraftKey());
+}
+
+function restoreDraft() {
+  const selectedDriverId = Number(driverSelect.value);
+  const keys = [];
+
+  if (selectedDriverId) {
+    keys.push(`${DRAFT_KEY}-driver-${selectedDriverId}`);
+  }
+
+  keys.push(getDraftKey(requestedDriverRef));
+
+  for (const key of keys) {
+    try {
+      const raw = localStorage.getItem(key);
+
+      if (!raw) {
+        continue;
+      }
+
+      const draft = JSON.parse(raw);
+
+      if (draft.driverId) {
+        driverSelect.value = String(draft.driverId);
+      }
+
+      if (draft.status) {
+        statusSelect.value = draft.status;
+      }
+
+      if (draft.locationText) {
+        locationInput.value = draft.locationText;
+      }
+
+      selectedCoordinates = {
+        lat: draft.lat ?? null,
+        lon: draft.lon ?? null,
+      };
+
+      fillTemplateOptions(getSelectedDriver());
+      locationTemplateSelect.value = draft.locationTemplate || "";
+      syncTemplateSelectFromLocation();
+
+      if (selectedCoordinates.lat !== null && selectedCoordinates.lon !== null) {
+        geoStatus.textContent = `${TEXT.geoSaved}: ${selectedCoordinates.lat}, ${selectedCoordinates.lon}`;
+      }
+
+      setQueueNote(TEXT.draftRestored);
+      return true;
+    } catch {
+      // Ignore broken draft.
+    }
+  }
+
+  return false;
+}
+
+function findRequestedDriver() {
+  if (!requestedDriverRef) {
+    return null;
+  }
+
+  if (requestedDriverRef.type === "number") {
+    return drivers.find((driver) => driver.number === requestedDriverRef.value) ?? null;
+  }
+
+  return drivers.find((driver) => driver.id === requestedDriverRef.value) ?? null;
+}
+
+function getSelectedDriver() {
+  return drivers.find((driver) => driver.id === Number(driverSelect.value)) ?? null;
+}
+
+function getTemplateValues(driver) {
+  return getLocationTemplateGroups(driver).flatMap((group) => group.options);
 }
 
 function fillStatusOptions() {
@@ -261,13 +372,36 @@ function fillDriverOptions(items) {
   items.forEach((driver) => {
     const option = document.createElement("option");
     option.value = String(driver.id);
-    option.textContent = `${TEXT.driver} ${driver.number} - ${getDriverDisplayName(driver)}`;
+    option.textContent = getDriverDisplayName(driver);
     driverSelect.appendChild(option);
   });
 
   if (currentValue) {
     driverSelect.value = currentValue;
   }
+}
+
+function renderAdminLinks(items) {
+  if (!isAdminMode) {
+    adminPanel.classList.add("hidden");
+    return;
+  }
+
+  driverLinks.innerHTML = "";
+
+  items.forEach((driver) => {
+    const link = document.createElement("a");
+    link.className = "admin-link-card";
+    link.href = buildDriverPageLink(driver);
+    link.innerHTML = `
+      <strong>${getDriverDisplayName(driver)}</strong>
+      <span>${TEXT.personalLinkLabel}</span>
+      <span>${buildDriverPageLink(driver)}</span>
+    `;
+    driverLinks.appendChild(link);
+  });
+
+  adminPanel.classList.remove("hidden");
 }
 
 function syncTemplateSelectFromLocation() {
@@ -293,6 +427,7 @@ function applyTemplateValue(templateValue) {
 
   locationInput.value = templateValue;
   syncTemplateSelectFromLocation();
+  saveDraft();
 }
 
 function applyDefaultTemplateForStatus(force = false) {
@@ -314,15 +449,20 @@ function applyDefaultTemplateForStatus(force = false) {
   syncTemplateSelectFromLocation();
 }
 
-function updateHeroForDriver(driver, isPersonalPage) {
+function updateHeroForDriver(driver) {
   const profile = getDriverProfile(driver);
   const displayName = getDriverDisplayName(driver);
 
-  if (!isPersonalPage || !driver) {
-    heroTitle.textContent =
-      "\u041E\u0431\u043D\u043E\u0432\u0438\u0442\u044C \u0441\u0432\u043E\u0439 \u0441\u0442\u0430\u0442\u0443\u0441";
-    heroText.textContent =
-      "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0441\u0435\u0431\u044F, \u0441\u0442\u0430\u0442\u0443\u0441 \u0438 \u0448\u0430\u0431\u043B\u043E\u043D \u043C\u0435\u0441\u0442\u0430. \u041F\u0440\u0438 \u043D\u0435\u043E\u0431\u0445\u043E\u0434\u0438\u043C\u043E\u0441\u0442\u0438 \u0442\u0435\u043A\u0441\u0442 \u043C\u0435\u0441\u0442\u043E\u043F\u043E\u043B\u043E\u0436\u0435\u043D\u0438\u044F \u043C\u043E\u0436\u043D\u043E \u043F\u043E\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u0432\u0440\u0443\u0447\u043D\u0443\u044E.";
+  if (isAdminMode) {
+    heroTitle.textContent = TEXT.coordinatorTitle;
+    heroText.textContent = TEXT.coordinatorText;
+    driverField.classList.remove("hidden");
+    return;
+  }
+
+  if (!requestedDriverRef || !driver) {
+    heroTitle.textContent = TEXT.personalTitle;
+    heroText.textContent = TEXT.personalText;
     driverField.classList.remove("hidden");
     return;
   }
@@ -332,7 +472,7 @@ function updateHeroForDriver(driver, isPersonalPage) {
   driverField.classList.add("hidden");
 }
 
-function updateSnapshot(driverId) {
+function renderSnapshot(driverId) {
   const selectedDriver = drivers.find((driver) => driver.id === Number(driverId));
   const current = selectedDriver?.current_status;
   const values = [
@@ -344,18 +484,30 @@ function updateSnapshot(driverId) {
   snapshot.querySelectorAll("dd").forEach((node, index) => {
     node.textContent = values[index];
   });
+}
 
-  fillTemplateOptions(selectedDriver);
+function seedFormForDriver(driver) {
+  if (!driver) {
+    return;
+  }
+
+  const current = driver.current_status;
 
   if (current) {
-    statusSelect.value = current.status || COLLECTING_STATUS;
+    statusSelect.value = current.status || STATUS_COLLECTING_IN_RUSSIA;
     locationInput.value = current.location_text || "";
+  } else {
+    statusSelect.value = STATUS_COLLECTING_IN_RUSSIA;
+    locationInput.value = "";
+  }
+
+  fillTemplateOptions(driver);
+
+  if (current) {
     syncTemplateSelectFromLocation();
     return;
   }
 
-  statusSelect.value = COLLECTING_STATUS;
-  locationInput.value = "";
   applyDefaultTemplateForStatus(true);
 }
 
@@ -363,8 +515,66 @@ function updateGeoStatus(message) {
   geoStatus.textContent = message;
 }
 
+async function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+
+  try {
+    await navigator.serviceWorker.register("./service-worker.js");
+  } catch {
+    // No-op.
+  }
+}
+
+async function sendUpdate(payload) {
+  const { error } = await supabase.rpc("update_driver_status_simple", payload);
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function flushQueue() {
+  const queue = loadQueue();
+
+  if (!queue.length || !navigator.onLine) {
+    updateQueuePanel();
+    return;
+  }
+
+  queueSummary.textContent = TEXT.queueRetrying;
+
+  const remaining = [];
+
+  for (const item of queue) {
+    try {
+      await sendUpdate({
+        p_driver_id: item.p_driver_id,
+        p_status: item.p_status,
+        p_location_text: item.p_location_text,
+        p_lat: item.p_lat,
+        p_lon: item.p_lon,
+        p_is_collecting_in_russia: item.p_is_collecting_in_russia,
+      });
+    } catch {
+      remaining.push(item);
+    }
+  }
+
+  saveQueue(remaining);
+  queueNote = "";
+  updateQueuePanel();
+
+  if (!remaining.length) {
+    clearError();
+    await loadFormData();
+  }
+}
+
 async function loadFormData() {
   submitButton.disabled = true;
+  updateSubmitUi();
 
   try {
     assertSupabaseConfigured();
@@ -372,48 +582,71 @@ async function loadFormData() {
     drivers = await fetchDrivers();
     fillDriverOptions(drivers);
     fillStatusOptions();
+    renderAdminLinks(drivers);
 
     const requestedDriver = findRequestedDriver();
+    const initialDriver =
+      (!isAdminMode && requestedDriver) ||
+      getSelectedDriver() ||
+      drivers[0] ||
+      null;
 
-    if (requestedDriver) {
-      driverSelect.value = String(requestedDriver.id);
-      updateHeroForDriver(requestedDriver, true);
-      updateSnapshot(requestedDriver.id);
-    } else if (drivers[0]) {
-      driverSelect.value = String(drivers[0].id);
-      updateHeroForDriver(drivers[0], false);
-      updateSnapshot(drivers[0].id);
+    if (initialDriver) {
+      driverSelect.value = String(initialDriver.id);
+      updateHeroForDriver(initialDriver);
+      renderSnapshot(initialDriver.id);
+      seedFormForDriver(initialDriver);
+    } else {
+      updateHeroForDriver(null);
     }
+
+    const restored = restoreDraft();
+
+    if (restored) {
+      updateHeroForDriver(getSelectedDriver());
+      renderSnapshot(driverSelect.value);
+    }
+
+    updateQueuePanel();
   } catch (error) {
     setError(error.message || TEXT.loadDriversFailed);
+    restoreDraft();
+    updateQueuePanel();
   } finally {
     submitButton.disabled = false;
+    updateSubmitUi();
   }
 }
 
 driverSelect.addEventListener("change", (event) => {
   const driver = drivers.find((item) => item.id === Number(event.target.value)) ?? null;
-  updateHeroForDriver(driver, false);
-  updateSnapshot(event.target.value);
+  updateHeroForDriver(driver);
+  renderSnapshot(event.target.value);
+  seedFormForDriver(driver);
+  saveDraft();
 });
 
 statusSelect.addEventListener("change", () => {
   applyDefaultTemplateForStatus();
+  saveDraft();
 });
 
 locationTemplateSelect.addEventListener("change", () => {
   if (locationTemplateSelect.value === CUSTOM_TEMPLATE) {
     locationInput.focus();
     syncTemplateSelectFromLocation();
+    saveDraft();
     return;
   }
 
   applyTemplateValue(locationTemplateSelect.value);
   locationInput.focus();
+  saveDraft();
 });
 
 locationInput.addEventListener("input", () => {
   syncTemplateSelectFromLocation();
+  saveDraft();
 });
 
 geoButton.addEventListener("click", () => {
@@ -436,6 +669,7 @@ geoButton.addEventListener("click", () => {
         `${TEXT.geoSaved}: ${selectedCoordinates.lat}, ${selectedCoordinates.lon}`
       );
       geoButton.disabled = false;
+      saveDraft();
     },
     (error) => {
       updateGeoStatus(error.message || TEXT.geoFailed);
@@ -449,6 +683,10 @@ geoButton.addEventListener("click", () => {
   );
 });
 
+retryQueueButton.addEventListener("click", () => {
+  flushQueue();
+});
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   clearError();
@@ -456,6 +694,14 @@ form.addEventListener("submit", async (event) => {
   const driverId = Number(driverSelect.value);
   const status = statusSelect.value;
   const locationText = locationInput.value.trim();
+  const payload = {
+    p_driver_id: driverId,
+    p_status: status,
+    p_location_text: locationText,
+    p_lat: selectedCoordinates.lat,
+    p_lon: selectedCoordinates.lon,
+    p_is_collecting_in_russia: status === STATUS_COLLECTING_IN_RUSSIA,
+  };
 
   if (!driverId) {
     setError(TEXT.chooseDriver);
@@ -473,18 +719,14 @@ form.addEventListener("submit", async (event) => {
   try {
     assertSupabaseConfigured();
 
-    const { error } = await supabase.rpc("update_driver_status_simple", {
-      p_driver_id: driverId,
-      p_status: status,
-      p_location_text: locationText,
-      p_lat: selectedCoordinates.lat,
-      p_lon: selectedCoordinates.lon,
-      p_is_collecting_in_russia: status === COLLECTING_STATUS,
-    });
-
-    if (error) {
-      throw error;
+    if (!navigator.onLine) {
+      enqueueUpdate(payload);
+      clearDraft();
+      setError(TEXT.savedOffline);
+      return;
     }
+
+    await sendUpdate(payload);
 
     updateGeoStatus(
       selectedCoordinates.lat !== null && selectedCoordinates.lon !== null
@@ -493,13 +735,34 @@ form.addEventListener("submit", async (event) => {
     );
 
     selectedCoordinates = { lat: null, lon: null };
+    queueNote = "";
+    clearDraft();
     await loadFormData();
   } catch (error) {
-    setError(error.message || TEXT.updateFailed);
+    if (shouldQueueUpdate(error)) {
+      enqueueUpdate(payload);
+      clearDraft();
+      setError(TEXT.savedOffline);
+    } else {
+      setError(error.message || TEXT.updateFailed);
+    }
   } finally {
     submitButton.disabled = false;
-    submitButton.textContent = TEXT.submit;
+    updateSubmitUi();
   }
 });
 
+window.addEventListener("online", () => {
+  setConnectionBanner();
+  flushQueue();
+});
+
+window.addEventListener("offline", () => {
+  setConnectionBanner();
+  updateQueuePanel();
+});
+
+setConnectionBanner();
+registerServiceWorker();
 loadFormData();
+flushQueue();

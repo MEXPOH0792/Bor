@@ -7,8 +7,9 @@ import {
   getFreshness,
 } from "./supabase.js";
 
-const CACHE_KEY = "bor-public-drivers-cache-v1";
+const CACHE_KEY = "bor-public-drivers-cache-v2";
 const FILTER_STORAGE_KEY = "bor-public-filter-v1";
+const AUTO_REFRESH_MS = 30_000;
 
 const TEXT = {
   noData: "Нет данных",
@@ -24,6 +25,7 @@ const TEXT = {
   offlineBanner:
     "Связь слабая или отсутствует. Если загрузка не пройдет, будут показаны последние сохраненные данные с устройства.",
   onlineBanner: "Связь есть. Страница обновляется автоматически.",
+  refreshing: "Обновляю...",
   cachedData:
     "Сейчас показаны последние сохраненные данные с этого устройства.",
   justNow: "Только что",
@@ -129,7 +131,8 @@ function getRelativeAgeLabel(updatedAt, freshness) {
     return TEXT.unknownAlert;
   }
 
-  const minutes = Math.round(freshness.hours * 60);
+  const safeHours = Math.max(0, freshness.hours);
+  const minutes = Math.round(safeHours * 60);
 
   if (minutes < 2) {
     return TEXT.justNow;
@@ -163,34 +166,39 @@ function getAlertText(freshness) {
 }
 
 function updateSummary(drivers) {
-  const counts = {
+  const freshnessCounts = {
     fresh: 0,
     warning: 0,
     stale: 0,
-    shaidon: 0,
   };
 
+  const collectingDriver = drivers.find((driver) => Boolean(driver.current_status?.is_collecting_in_russia));
+  const inRouteDriver = drivers.find((driver) => driver.current_status?.status === "в пути");
+  const latestDriver = [...drivers]
+    .filter((driver) => driver.current_status?.updated_at)
+    .sort(
+      (left, right) =>
+        new Date(right.current_status.updated_at).getTime() - new Date(left.current_status.updated_at).getTime()
+    )[0] ?? null;
+  const shaidonDrivers = drivers.filter((driver) => driver.current_status?.status === STATUS_IN_SHAIDON);
+
   drivers.forEach((driver) => {
-    const current = driver.current_status;
-    const freshness = getFreshness(current?.updated_at);
-
-    if (freshness.tone === "fresh") {
-      counts.fresh += 1;
-    } else if (freshness.tone === "warning") {
-      counts.warning += 1;
+    const tone = getFreshness(driver.current_status?.updated_at).tone;
+    if (tone === "fresh") {
+      freshnessCounts.fresh += 1;
+    } else if (tone === "warning") {
+      freshnessCounts.warning += 1;
     } else {
-      counts.stale += 1;
-    }
-
-    if (current?.status === STATUS_IN_SHAIDON) {
-      counts.shaidon += 1;
+      freshnessCounts.stale += 1;
     }
   });
 
-  freshCount.textContent = String(counts.fresh);
-  warningCount.textContent = String(counts.warning);
-  staleCount.textContent = String(counts.stale);
-  shaidonCount.textContent = String(counts.shaidon);
+  freshCount.textContent = collectingDriver ? getDriverDisplayName(collectingDriver) : `${freshnessCounts.fresh} водителей`;
+  warningCount.textContent = inRouteDriver ? getDriverDisplayName(inRouteDriver) : `${freshnessCounts.warning} водителей`;
+  staleCount.textContent = latestDriver
+    ? getRelativeAgeLabel(latestDriver.current_status?.updated_at, getFreshness(latestDriver.current_status?.updated_at))
+    : `${freshnessCounts.stale} водителей`;
+  shaidonCount.textContent = shaidonDrivers.length ? `${shaidonDrivers.length} водитель${shaidonDrivers.length > 1 ? 'я' : ''}` : 'Нет';
 }
 
 function applyFilter(drivers) {
@@ -214,6 +222,20 @@ function applyFilter(drivers) {
   return filtered;
 }
 
+function getInitials(name) {
+  const parts = String(name || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (!parts.length) {
+    return "В";
+  }
+
+  return parts.map((part) => part[0]?.toUpperCase() || "").join("");
+}
+
 function renderDrivers(drivers) {
   driversGrid.innerHTML = "";
   updateSummary(drivers);
@@ -225,34 +247,36 @@ function renderDrivers(drivers) {
     const card = fragment.querySelector(".driver-card");
     const number = fragment.querySelector(".driver-number");
     const name = fragment.querySelector(".driver-name");
+    const avatar = fragment.querySelector(".driver-avatar");
     const phoneLink = fragment.querySelector(".driver-phone-link");
-    const status = fragment.querySelector(".driver-status");
     const locationMain = fragment.querySelector(".driver-location-main");
     const updatedMain = fragment.querySelector(".driver-updated-main");
-    const collecting = fragment.querySelector(".driver-collecting");
     const freshnessPill = fragment.querySelector(".freshness-pill");
     const statusChip = fragment.querySelector(".status-chip");
     const ageNote = fragment.querySelector(".driver-age-note");
     const alert = fragment.querySelector(".driver-alert");
+    const callButton = fragment.querySelector(".driver-call-button");
 
     const current = driver.current_status;
     const freshness = getFreshness(current?.updated_at);
     const alertText = getAlertText(freshness);
     const phoneValue = createValue(driver.phone, TEXT.noPhone);
+    const displayName = getDriverDisplayName(driver);
 
     card.dataset.freshness = freshness.tone;
     freshnessPill.dataset.freshness = freshness.tone;
     statusChip.dataset.freshness = freshness.tone;
 
-    number.textContent = `#${driver.number}`;
-    name.textContent = getDriverDisplayName(driver);
+    number.textContent = `Водитель ${driver.number}`;
+    name.textContent = displayName;
+    if (avatar) {
+      avatar.textContent = getInitials(displayName);
+    }
     phoneLink.textContent = phoneValue;
-    status.textContent = createValue(current?.status);
     statusChip.textContent = createValue(current?.status);
     locationMain.textContent = createValue(current?.location_text);
-    updatedMain.textContent = formatDateTime(current?.updated_at);
+    updatedMain.textContent = `Обновлено: ${formatDateTime(current?.updated_at)}`;
     ageNote.textContent = getRelativeAgeLabel(current?.updated_at, freshness);
-    collecting.textContent = current?.is_collecting_in_russia ? TEXT.yes : TEXT.no;
     freshnessPill.textContent = freshness.label;
     alert.textContent = alertText;
     alert.classList.remove("hidden");
@@ -260,10 +284,16 @@ function renderDrivers(drivers) {
     if (driver.phone && String(driver.phone).trim()) {
       const phoneHref = String(driver.phone).replace(/[^+\d]/g, "");
       phoneLink.href = `tel:${phoneHref}`;
+      callButton.href = `tel:${phoneHref}`;
       phoneLink.setAttribute("aria-label", `${TEXT.phoneCall} ${driver.phone}`);
+      callButton.setAttribute("aria-label", `${TEXT.phoneCall} ${driver.phone}`);
+      phoneLink.classList.remove("is-disabled");
+      callButton.classList.remove("is-disabled");
     } else {
       phoneLink.removeAttribute("href");
+      callButton.removeAttribute("href");
       phoneLink.classList.add("is-disabled");
+      callButton.classList.add("is-disabled");
     }
 
     driversGrid.appendChild(fragment);
@@ -306,9 +336,9 @@ async function registerServiceWorker() {
   }
 }
 
-async function loadDrivers() {
+async function loadDrivers(force = false) {
   refreshButton.disabled = true;
-  syncInfo.textContent = TEXT.loading;
+  syncInfo.textContent = force ? TEXT.refreshing : TEXT.loading;
 
   try {
     assertSupabaseConfigured();
@@ -348,11 +378,17 @@ async function loadDrivers() {
 }
 
 function startAutoRefresh() {
-  autoRefreshId = window.setInterval(loadDrivers, 60_000);
+  autoRefreshId = window.setInterval(loadDrivers, AUTO_REFRESH_MS);
+}
+
+function triggerVisibleRefresh() {
+  if (document.visibilityState === "visible") {
+    loadDrivers();
+  }
 }
 
 refreshButton.addEventListener("click", () => {
-  loadDrivers();
+  loadDrivers(true);
 });
 
 filterBar.addEventListener("click", (event) => {
@@ -376,6 +412,9 @@ window.addEventListener("offline", () => {
   setConnectionBanner();
 });
 
+document.addEventListener("visibilitychange", triggerVisibleRefresh);
+window.addEventListener("focus", triggerVisibleRefresh);
+
 setConnectionBanner();
 currentFilter = loadSavedFilter();
 registerServiceWorker();
@@ -386,4 +425,7 @@ window.addEventListener("beforeunload", () => {
   if (autoRefreshId) {
     window.clearInterval(autoRefreshId);
   }
+
+  document.removeEventListener("visibilitychange", triggerVisibleRefresh);
+  window.removeEventListener("focus", triggerVisibleRefresh);
 });

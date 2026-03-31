@@ -1,25 +1,55 @@
-﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es2020";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es2020";
 
 export const SUPABASE_URL = "https://wfagftibcjlouxftzevc.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_y3kAiWOXJWjPwHFidUYA1A_inltPpUL";
 
+export const STATUS_COLLECTING_IN_RUSSIA = "собирает в России";
+export const STATUS_IN_TRANSIT = "в пути";
+export const STATUS_AT_BORDER = "на границе";
+export const STATUS_IN_SHAIDON = "в Шайдоне";
+export const STATUS_UNLOADING = "разгружает";
+export const STATUS_OFFLINE = "не на связи";
+
 export const DRIVER_STATUSES = [
-  "\u0441\u043E\u0431\u0438\u0440\u0430\u0435\u0442 \u0432 \u0420\u043E\u0441\u0441\u0438\u0438",
-  "\u0432 \u043F\u0443\u0442\u0438",
-  "\u043D\u0430 \u0433\u0440\u0430\u043D\u0438\u0446\u0435",
-  "\u0432 \u0428\u0430\u0439\u0434\u043E\u043D\u0435",
-  "\u0440\u0430\u0437\u0433\u0440\u0443\u0436\u0430\u0435\u0442",
-  "\u043D\u0435 \u043D\u0430 \u0441\u0432\u044F\u0437\u0438",
+  STATUS_COLLECTING_IN_RUSSIA,
+  STATUS_IN_TRANSIT,
+  STATUS_AT_BORDER,
+  STATUS_IN_SHAIDON,
+  STATUS_UNLOADING,
+  STATUS_OFFLINE,
 ];
+
+export const RUSSIA_COLLECT_POINT = "ВДНХ";
+export const RUSSIA_UNLOAD_POINT = "Есенина 109";
+export const ROUTE_POINTS = ["Узбекистон", "Казок"];
+
+export const DRIVER_PROFILES = {
+  1: {
+    name: "Ахлиддин",
+    shaidonPoint: "Гаражи Зариф (кумур фуруш)",
+  },
+  2: {
+    name: "Аслиддин",
+    shaidonPoint: "Се кучаги лаби сой",
+  },
+  3: {
+    name: "Джамшед",
+    shaidonPoint: "Назди Азизхуча",
+  },
+  4: {
+    name: "Эрач",
+    shaidonPoint: "Хонаи Эрач",
+  },
+};
 
 const TEXT = {
   configureSupabase:
-    "\u0421\u043D\u0430\u0447\u0430\u043B\u0430 \u0432\u0441\u0442\u0430\u0432\u044C\u0442\u0435 Supabase URL \u0438 anon key \u0432 \u0444\u0430\u0439\u043B supabase.js.",
-  noUpdate: "\u041D\u0435\u0442 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u044F",
-  noData: "\u041D\u0435\u0442 \u0434\u0430\u043D\u043D\u044B\u0445",
-  fresh: "\u0421\u0432\u0435\u0436\u043E",
-  warning: "\u041D\u0443\u0436\u043D\u043E \u043E\u0431\u043D\u043E\u0432\u0438\u0442\u044C",
-  stale: "\u0421\u0442\u0430\u0440\u043E\u0435 \u043E\u0431\u043D\u043E\u0432\u043B\u0435\u043D\u0438\u0435",
+    "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
+  noUpdate: "Нет обновления",
+  noData: "Нет данных",
+  fresh: "Свежо",
+  warning: "Нужно обновить",
+  stale: "Старое обновление",
 };
 
 const isConfigured =
@@ -41,6 +71,94 @@ export function assertSupabaseConfigured() {
   }
 }
 
+export function getDriverProfile(driverOrNumber) {
+  const driverNumber =
+    typeof driverOrNumber === "number" ? driverOrNumber : driverOrNumber?.number;
+
+  return driverNumber ? DRIVER_PROFILES[driverNumber] ?? null : null;
+}
+
+export function getDriverDisplayName(driver) {
+  const profile = getDriverProfile(driver);
+  const rawName = driver?.name?.trim();
+
+  if (profile?.name) {
+    return profile.name;
+  }
+
+  if (rawName && !/^Водитель\s+\d+$/i.test(rawName)) {
+    return rawName;
+  }
+
+  return `#${driver?.number ?? ""}`.trim();
+}
+
+export function getLocationTemplateGroups(driver) {
+  const profile = getDriverProfile(driver);
+  const groups = [
+    {
+      label: "Россия",
+      options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT],
+    },
+    {
+      label: "Маршрут",
+      options: ROUTE_POINTS,
+    },
+  ];
+
+  if (profile?.shaidonPoint) {
+    groups.push({
+      label: "Шайдон / точка водителя",
+      options: [profile.shaidonPoint],
+    });
+  }
+
+  return groups;
+}
+
+export function getDefaultTemplateForStatus(status, driver) {
+  const profile = getDriverProfile(driver);
+
+  if (status === STATUS_COLLECTING_IN_RUSSIA) {
+    return RUSSIA_COLLECT_POINT;
+  }
+
+  if (status === STATUS_UNLOADING) {
+    return RUSSIA_UNLOAD_POINT;
+  }
+
+  if (status === STATUS_IN_SHAIDON) {
+    return profile?.shaidonPoint ?? "";
+  }
+
+  return "";
+}
+
+export function getRequestedDriverRef() {
+  const params = new URLSearchParams(window.location.search);
+  const driverId = Number(params.get("driver_id"));
+  const driverNumber = Number(params.get("driver_number") || params.get("driver"));
+
+  if (Number.isInteger(driverNumber) && driverNumber > 0) {
+    return { type: "number", value: driverNumber };
+  }
+
+  if (Number.isInteger(driverId) && driverId > 0) {
+    return { type: "id", value: driverId };
+  }
+
+  return null;
+}
+
+export function isAdminModeRequested() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("admin") === "1";
+}
+
+export function buildDriverPageLink(driver) {
+  return `./driver.html?driver_number=${driver.number}`;
+}
+
 export async function fetchDrivers() {
   assertSupabaseConfigured();
 
@@ -53,8 +171,10 @@ export async function fetchDrivers() {
     supabase
       .from("driver_status")
       .select(
-        "driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
-      ),
+        "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
+      )
+      .order("updated_at", { ascending: false, nullsFirst: false })
+      .order("id", { ascending: false }),
   ]);
 
   if (driversResult.error) {
@@ -65,9 +185,13 @@ export async function fetchDrivers() {
     throw statusesResult.error;
   }
 
-  const statusesByDriverId = new Map(
-    (statusesResult.data ?? []).map((item) => [item.driver_id, item])
-  );
+  const statusesByDriverId = new Map();
+
+  for (const item of statusesResult.data ?? []) {
+    if (!statusesByDriverId.has(item.driver_id)) {
+      statusesByDriverId.set(item.driver_id, item);
+    }
+  }
 
   return (driversResult.data ?? []).map((driver) => ({
     ...driver,
@@ -109,12 +233,3 @@ export function getFreshness(updatedAt) {
 
   return { tone: "stale", label: TEXT.stale, hours: diffHours };
 }
-
-export function getDriverIdFromUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const rawValue = params.get("driver_id");
-  const driverId = Number(rawValue);
-
-  return Number.isInteger(driverId) && driverId > 0 ? driverId : null;
-}
-
