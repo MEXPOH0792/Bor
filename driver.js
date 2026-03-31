@@ -38,8 +38,6 @@ const TEXT = {
     "Интернет слабый. Обновление сохранено на устройстве и будет отправлено при появлении связи.",
   loadDriversFailed: "Не удалось загрузить список водителей.",
   updateFailed: "Не удалось обновить статус. Проверьте настройки Supabase.",
-  shaidonPoint: "Точки в Шайдоне",
-  routeRussia: "Россия: ВДНХ и Есенина 109. Маршрут: Узбекистон и Казок.",
   onlineBanner: "Связь есть. Можно отправлять обновления сразу.",
   offlineBanner:
     "Связь слабая или отсутствует. Обновления будут временно сохраняться на устройстве.",
@@ -450,7 +448,6 @@ function applyDefaultTemplateForStatus(force = false) {
 }
 
 function updateHeroForDriver(driver) {
-  const profile = getDriverProfile(driver);
   const displayName = getDriverDisplayName(driver);
 
   if (isAdminMode) {
@@ -468,10 +465,7 @@ function updateHeroForDriver(driver) {
   }
 
   heroTitle.textContent = displayName;
-  const shaidonSummary = profile
-    ? `сбор — ${profile.shaidonCollectPoint ?? TEXT.noData}, разгрузка — ${profile.shaidonUnloadPoint ?? TEXT.noData}`
-    : TEXT.noData;
-  heroText.textContent = `${TEXT.shaidonPoint}: ${shaidonSummary}. ${TEXT.routeRussia}`;
+  heroText.textContent = TEXT.personalText;
   driverField.classList.add("hidden");
 }
 

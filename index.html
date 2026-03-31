@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Отслеживание водителей — BOR</title>
-    <meta name="theme-color" content="#223a5e" />
+    <title>Статусы водителей</title>
+    <meta name="theme-color" content="#162238" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="BOR" />
@@ -16,106 +16,103 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="page-shell page-shell-wide">
-      <header class="topbar topbar-main">
-        <div>
-          <h1>Отслеживание водителей</h1>
-          <p class="hero-subtitle">Перевозки из России в Шайдон</p>
+    <div class="page-shell">
+      <header class="hero">
+        <p class="eyebrow">Грузоперевозки</p>
+        <h1>Отслеживание водителей</h1>
+        <p class="hero-text">
+          Последнее место, статус и время обновления по каждому водителю. Всё видно сразу и удобно на телефоне.
+        </p>
+        <div class="hero-actions">
+          <button id="refreshButton" class="button button-primary" type="button">
+            Обновить данные
+          </button>
         </div>
-        <nav class="topbar-links" aria-label="Быстрые ссылки">
-          <a href="tel:+79990000000">Поддержка</a>
-          <a href="./driver.html">Войти по ссылке</a>
-        </nav>
+        <div class="status-legend" aria-label="Легенда свежести">
+          <span class="legend-item"><span class="legend-dot legend-fresh"></span>Меньше 2 часов</span>
+          <span class="legend-item"><span class="legend-dot legend-warning"></span>От 2 до 8 часов</span>
+          <span class="legend-item"><span class="legend-dot legend-stale"></span>Больше 8 часов</span>
+        </div>
       </header>
 
-      <main class="page-main page-main-compact">
+      <main>
         <section id="connectionBanner" class="panel panel-warning hidden" role="status"></section>
         <section id="cacheBanner" class="panel panel-warning hidden" role="status"></section>
-        <section id="errorBanner" class="panel panel-error hidden" role="alert"></section>
 
-        <section class="summary-strip-wrap">
-          <div id="summaryGrid" class="summary-strip" aria-live="polite">
-            <article class="summary-tile summary-fresh">
-              <span class="summary-kicker">Сейчас собирает:</span>
-              <strong id="freshCount" class="summary-inline-value">0</strong>
-            </article>
-            <article class="summary-tile summary-route">
-              <span class="summary-kicker">В пути:</span>
-              <strong id="warningCount" class="summary-inline-value">0</strong>
-            </article>
-            <article class="summary-tile summary-warning">
-              <span class="summary-kicker">Нужно проверить:</span>
-              <strong id="staleCount" class="summary-inline-value">0</strong>
-            </article>
-            <article class="summary-tile summary-danger">
-              <span class="summary-kicker">В Шайдоне:</span>
-              <strong id="shaidonCount" class="summary-inline-value">0</strong>
-            </article>
+        <section class="panel panel-tight">
+          <div class="panel-row">
+            <div>
+              <h2>Сводка по водителям</h2>
+              <p class="muted">Сначала смотрите место и время обновления, затем статус.</p>
+            </div>
+            <p id="syncInfo" class="muted">Ожидание загрузки...</p>
           </div>
-        </section>
-
-        <section class="toolbar-row">
+          <div id="summaryGrid" class="summary-grid" aria-live="polite">
+            <article class="summary-card"><span class="summary-label">Свежие</span><strong id="freshCount" class="summary-value">0</strong></article>
+            <article class="summary-card"><span class="summary-label">Нужно проверить</span><strong id="warningCount" class="summary-value">0</strong></article>
+            <article class="summary-card"><span class="summary-label">Давно без обновления</span><strong id="staleCount" class="summary-value">0</strong></article>
+            <article class="summary-card"><span class="summary-label">В Шайдоне</span><strong id="shaidonCount" class="summary-value">0</strong></article>
+          </div>
           <div id="filterBar" class="filter-bar" aria-label="Фильтры водителей">
             <button class="filter-button is-active" type="button" data-filter="all">Все</button>
             <button class="filter-button" type="button" data-filter="attention">Нужна проверка</button>
             <button class="filter-button" type="button" data-filter="shaidon">В Шайдоне</button>
             <button class="filter-button" type="button" data-filter="collecting">Собирают в России</button>
           </div>
-          <div class="toolbar-side">
-            <p id="syncInfo" class="muted sync-info">Ожидание загрузки...</p>
-            <button id="refreshButton" class="button button-primary button-small" type="button">
-              Обновить
-            </button>
-          </div>
+          <p id="filterInfo" class="filter-info muted">Показаны все водители.</p>
         </section>
 
-        <p id="filterInfo" class="filter-info muted">Показаны все водители.</p>
-
+        <section id="errorBanner" class="panel panel-error hidden" role="alert"></section>
         <section id="emptyState" class="panel panel-tight hidden" role="status">
           <p id="emptyStateText" class="muted">По этому фильтру водителей нет.</p>
         </section>
 
-        <section id="driversGrid" class="drivers-list" aria-live="polite"></section>
+        <section id="driversGrid" class="drivers-grid" aria-live="polite"></section>
       </main>
     </div>
 
     <template id="driverCardTemplate">
       <article class="driver-card">
-        <div class="driver-card-head">
-          <p class="driver-number"></p>
-        </div>
-
-        <div class="driver-card-body">
-          <div class="driver-identity">
-            <div class="driver-avatar" aria-hidden="true"></div>
-            <div class="driver-identity-copy">
-              <h3 class="driver-name"></h3>
-              <p class="driver-phone-row"><a class="driver-phone-link" href="#"></a></p>
-            </div>
+        <div class="card-top">
+          <div>
+            <p class="driver-number"></p>
+            <h3 class="driver-name"></h3>
           </div>
-
-          <div class="driver-status-slot">
+          <div class="card-badges">
             <span class="status-chip"></span>
             <span class="freshness-pill"></span>
           </div>
-
-          <div class="driver-action-slot">
-            <a class="button button-secondary driver-call-button" href="#">Позвонить</a>
-          </div>
         </div>
 
-        <div class="driver-card-foot">
-          <div class="driver-location-line">
-            <span class="meta-icon">●</span>
-            <p class="driver-location-main"></p>
+        <div class="driver-priority">
+          <p class="driver-priority-label">Последнее место</p>
+          <p class="driver-location-main"></p>
+        </div>
+
+        <div class="driver-update-row">
+          <div>
+            <p class="driver-priority-label">Последнее обновление</p>
+            <p class="driver-updated-main"></p>
           </div>
-          <div class="driver-time-line">
-            <span class="driver-updated-main"></span>
-            <span class="driver-age-note"></span>
-          </div>
+          <p class="driver-age-note"></p>
         </div>
 
         <p class="driver-alert hidden"></p>
+
+        <dl class="driver-meta">
+          <div>
+            <dt>Телефон</dt>
+            <dd><a class="driver-phone-link" href="#"></a></dd>
+          </div>
+          <div>
+            <dt>Статус</dt>
+            <dd class="driver-status"></dd>
+          </div>
+          <div>
+            <dt>Собирает в России</dt>
+            <dd class="driver-collecting"></dd>
+          </div>
+        </dl>
       </article>
     </template>
 

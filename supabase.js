@@ -26,29 +26,28 @@ export const ROUTE_POINTS = ["Узбекистон", "Казок"];
 export const DRIVER_PROFILES = {
   1: {
     name: "Ахлиддин",
-    shaidonCollectPoint: "Зарифи кумур фуруш",
-    shaidonUnloadPoint: "Бозори кухна",
+    collectInShaidon: "Зарифи кумур фуруш",
+    unloadInShaidon: "Бозори кухна",
   },
   2: {
     name: "Аслиддин",
-    shaidonCollectPoint: "Се кучаги лаби сой",
-    shaidonUnloadPoint: "Се кучаги лаби сой",
+    collectInShaidon: "Се кучаги лаби сой",
+    unloadInShaidon: "Се кучаги лаби сой",
   },
   3: {
     name: "Джамшед",
-    shaidonCollectPoint: "Назди Азизхуча",
-    shaidonUnloadPoint: "Назди Азизхуча",
+    collectInShaidon: "Назди Азизхуча",
+    unloadInShaidon: "Назди Азизхуча",
   },
   4: {
     name: "Эрач",
-    shaidonCollectPoint: "Хонаи Эрач",
-    shaidonUnloadPoint: "Хонаи Эрач",
+    collectInShaidon: "Хонаи Эрач",
+    unloadInShaidon: "Хонаи Эрач",
   },
 };
 
 const TEXT = {
-  configureSupabase:
-    "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
+  configureSupabase: "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
   noUpdate: "Нет обновления",
   noData: "Нет данных",
   fresh: "Свежо",
@@ -76,9 +75,7 @@ export function assertSupabaseConfigured() {
 }
 
 export function getDriverProfile(driverOrNumber) {
-  const driverNumber =
-    typeof driverOrNumber === "number" ? driverOrNumber : driverOrNumber?.number;
-
+  const driverNumber = typeof driverOrNumber === "number" ? driverOrNumber : driverOrNumber?.number;
   return driverNumber ? DRIVER_PROFILES[driverNumber] ?? null : null;
 }
 
@@ -99,27 +96,23 @@ export function getDriverDisplayName(driver) {
 
 export function getLocationTemplateGroups(driver) {
   const profile = getDriverProfile(driver);
+  const shaidonOptions = [];
+
+  if (profile?.collectInShaidon) {
+    shaidonOptions.push(profile.collectInShaidon);
+  }
+
+  if (profile?.unloadInShaidon && profile.unloadInShaidon !== profile.collectInShaidon) {
+    shaidonOptions.push(profile.unloadInShaidon);
+  }
+
   const groups = [
-    {
-      label: "Россия",
-      options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT],
-    },
-    {
-      label: "Маршрут",
-      options: ROUTE_POINTS,
-    },
+    { label: "Россия", options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT] },
+    { label: "Маршрут", options: ROUTE_POINTS },
   ];
 
-  const shaidonOptions = [
-    profile?.shaidonCollectPoint,
-    profile?.shaidonUnloadPoint,
-  ].filter(Boolean);
-
   if (shaidonOptions.length) {
-    groups.push({
-      label: "Шайдон / точки водителя",
-      options: Array.from(new Set(shaidonOptions)),
-    });
+    groups.push({ label: "Шайдон / точка водителя", options: shaidonOptions });
   }
 
   return groups;
@@ -133,11 +126,11 @@ export function getDefaultTemplateForStatus(status, driver) {
   }
 
   if (status === STATUS_UNLOADING) {
-    return profile?.shaidonUnloadPoint ?? RUSSIA_UNLOAD_POINT;
+    return profile?.unloadInShaidon ?? "";
   }
 
   if (status === STATUS_IN_SHAIDON) {
-    return profile?.shaidonCollectPoint ?? "";
+    return profile?.collectInShaidon ?? "";
   }
 
   return "";
@@ -179,9 +172,9 @@ export async function fetchDrivers() {
       .order("number", { ascending: true }),
     supabase
       .from("driver_status")
-      .select(
-        "driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
-      ),
+      .select("id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at")
+      .order("updated_at", { ascending: false })
+      .order("id", { ascending: false }),
   ]);
 
   if (driversResult.error) {
@@ -192,9 +185,12 @@ export async function fetchDrivers() {
     throw statusesResult.error;
   }
 
-  const statusesByDriverId = new Map(
-    (statusesResult.data ?? []).map((item) => [item.driver_id, item])
-  );
+  const statusesByDriverId = new Map();
+  for (const item of statusesResult.data ?? []) {
+    if (!statusesByDriverId.has(item.driver_id)) {
+      statusesByDriverId.set(item.driver_id, item);
+    }
+  }
 
   return (driversResult.data ?? []).map((driver) => ({
     ...driver,
@@ -215,11 +211,7 @@ export function formatDateTime(value) {
 
 export function getFreshness(updatedAt) {
   if (!updatedAt) {
-    return {
-      tone: "unknown",
-      label: TEXT.noData,
-      hours: Number.POSITIVE_INFINITY,
-    };
+    return { tone: "unknown", label: TEXT.noData, hours: Number.POSITIVE_INFINITY };
   }
 
   const now = Date.now();

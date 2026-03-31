@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Обновление статуса водителя</title>
-    <meta name="theme-color" content="#1f6b45" />
+    <meta name="theme-color" content="#162238" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="BOR" />
@@ -20,10 +20,7 @@
       <header class="hero hero-compact">
         <p class="eyebrow">Для водителей</p>
         <h1>Обновить свой статус</h1>
-        <p class="hero-text">
-          Выберите статус и шаблон места. Если интернет пропадет, обновление будет
-          сохранено на устройстве и отправлено позже.
-        </p>
+        <p class="hero-text">Выберите статус, шаблон места или свой текст. При слабом интернете обновление сохранится на телефоне и отправится позже.</p>
       </header>
 
       <main>
@@ -35,9 +32,7 @@
               <h2>Ожидают отправки</h2>
               <p id="queueSummary" class="muted">Нет отложенных обновлений.</p>
             </div>
-            <button id="retryQueueButton" class="button button-secondary" type="button">
-              Отправить сейчас
-            </button>
+            <button id="retryQueueButton" class="button button-secondary" type="button">Отправить сейчас</button>
           </div>
         </section>
 
@@ -45,9 +40,7 @@
           <div class="panel-row">
             <div>
               <h2>Режим координатора</h2>
-              <p class="muted">
-                Здесь можно быстро перейти на личную ссылку любого водителя.
-              </p>
+              <p class="muted">Здесь можно быстро открыть личную ссылку любого водителя.</p>
             </div>
           </div>
           <div id="driverLinks" class="admin-links"></div>
@@ -76,35 +69,19 @@
 
             <label class="field">
               <span>Местоположение</span>
-              <input
-                id="locationInput"
-                type="text"
-                placeholder="Например, Казахстан, трасса"
-                maxlength="120"
-                required
-              />
+              <input id="locationInput" type="text" placeholder="Например, Казахстан, трасса" maxlength="120" required />
             </label>
 
-            <p class="status-template-note muted">
-              По умолчанию: «собирает в России» → ВДНХ, «в Шайдоне» → личная точка водителя, «разгружает» → точка разгрузки водителя в Шайдоне. Россия и маршрут тоже доступны в шаблонах.
-            </p>
+            <p class="status-template-note muted">По умолчанию: «собирает в России» → ВДНХ, «в Шайдоне» и «разгружает» → личная точка водителя.</p>
 
             <div class="geo-panel">
-              <button id="geoButton" class="button button-secondary" type="button">
-                Взять геолокацию
-              </button>
-              <p id="geoStatus" class="muted">
-                Координаты не выбраны. Можно отправить только текстовое место.
-              </p>
+              <button id="geoButton" class="button button-secondary" type="button">Взять геолокацию</button>
+              <p id="geoStatus" class="muted">Координаты не выбраны. Можно отправить только текстовое место.</p>
             </div>
 
             <div class="driver-actions">
-              <button id="submitButton" class="button button-primary button-wide" type="submit">
-                Обновить
-              </button>
-              <p id="submitHint" class="submit-hint muted">
-                При слабом интернете обновление сначала сохранится на устройстве.
-              </p>
+              <button id="submitButton" class="button button-primary button-wide" type="submit">Обновить</button>
+              <p id="submitHint" class="submit-hint muted">При слабом интернете обновление сначала сохранится на устройстве.</p>
               <a class="button button-secondary" href="./index.html">Открыть клиентскую страницу</a>
             </div>
           </form>
@@ -113,18 +90,9 @@
         <section class="panel panel-tight">
           <h2>Последние данные по выбранному водителю</h2>
           <dl id="driverSnapshot" class="driver-snapshot">
-            <div>
-              <dt>Статус</dt>
-              <dd>Нет данных</dd>
-            </div>
-            <div>
-              <dt>Местоположение</dt>
-              <dd>Нет данных</dd>
-            </div>
-            <div>
-              <dt>Последнее обновление</dt>
-              <dd>Нет данных</dd>
-            </div>
+            <div><dt>Статус</dt><dd>Нет данных</dd></div>
+            <div><dt>Местоположение</dt><dd>Нет данных</dd></div>
+            <div><dt>Последнее обновление</dt><dd>Нет данных</dd></div>
           </dl>
         </section>
       </main>
