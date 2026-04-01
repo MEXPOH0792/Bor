@@ -73,7 +73,7 @@ const queuePanel = document.querySelector("#queuePanel");
 const queueSummary = document.querySelector("#queueSummary");
 const connectionBanner = document.querySelector("#connectionBanner");
 const errorBanner = document.querySelector("#driverErrorBanner");
-const snapshot = document.querySelector("#driverSnapshot");
+const driverLastLocation = document.querySelector("#driverLastLocation");
 const heroTitle = document.querySelector("h1");
 const heroText = document.querySelector(".hero-text") ?? document.querySelector(".hero-subtitle");
 const driverField = driverSelect.closest(".field");
@@ -478,16 +478,10 @@ function updateHeroForDriver(driver) {
 function renderSnapshot(driverId) {
   const selectedDriver = drivers.find((driver) => driver.id === Number(driverId));
   const current = selectedDriver?.current_status;
-  const values = [
-    getStatusLabel(current?.status) || TEXT.noData,
-    current?.location_text || TEXT.noData,
-    formatDateTime(current?.updated_at),
-    formatCollectUntil(current?.collect_until_date),
-  ];
 
-  snapshot.querySelectorAll("dd").forEach((node, index) => {
-    node.textContent = values[index];
-  });
+  if (driverLastLocation) {
+    driverLastLocation.textContent = current?.location_text || TEXT.noData;
+  }
 }
 
 function seedFormForDriver(driver) {
