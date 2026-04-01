@@ -9,6 +9,7 @@ import {
   getDefaultTemplateForStatus,
   getDriverDisplayName,
   getDriverProfile,
+  getStatusLabel,
   getLocationTemplateGroups,
   getRequestedDriverRef,
   isAdminModeRequested,
@@ -74,7 +75,7 @@ const connectionBanner = document.querySelector("#connectionBanner");
 const errorBanner = document.querySelector("#driverErrorBanner");
 const snapshot = document.querySelector("#driverSnapshot");
 const heroTitle = document.querySelector("h1");
-const heroText = document.querySelector(".hero-text");
+const heroText = document.querySelector(".hero-text") ?? document.querySelector(".hero-subtitle");
 const driverField = driverSelect.closest(".field");
 const adminPanel = document.querySelector("#adminPanel");
 const driverLinks = document.querySelector("#driverLinks");
@@ -322,7 +323,7 @@ function fillStatusOptions() {
   DRIVER_STATUSES.forEach((status) => {
     const option = document.createElement("option");
     option.value = status;
-    option.textContent = status;
+    option.textContent = getStatusLabel(status);
     statusSelect.appendChild(option);
   });
 }
@@ -478,7 +479,7 @@ function renderSnapshot(driverId) {
   const selectedDriver = drivers.find((driver) => driver.id === Number(driverId));
   const current = selectedDriver?.current_status;
   const values = [
-    current?.status || TEXT.noData,
+    getStatusLabel(current?.status) || TEXT.noData,
     current?.location_text || TEXT.noData,
     formatDateTime(current?.updated_at),
     formatCollectUntil(current?.collect_until_date),
