@@ -876,3 +876,60 @@ input[type="text"]:focus {
     padding: 16px;
   }
 }
+
+
+/* compact top blocks */
+.hero-unified {
+  padding: 1.1rem 1rem 0.95rem;
+}
+.hero-unified .eyebrow {
+  margin-bottom: 0.3rem;
+}
+.hero-unified h1 {
+  margin-bottom: 0.35rem;
+}
+.hero-unified .hero-text {
+  margin-bottom: 0.55rem;
+  font-size: 0.95rem;
+}
+.summary-grid-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.summary-grid-compact .summary-card:last-child {
+  grid-column: auto;
+}
+.summary-card {
+  padding: 0.75rem 0.7rem;
+}
+.summary-label {
+  font-size: 0.76rem;
+}
+.summary-value {
+  font-size: 1.08rem;
+}
+.filter-bar-compact {
+  margin-top: 0.55rem;
+}
+.hero-inline-snapshot {
+  margin-top: 0.65rem;
+}
+.hero-inline-snapshot h2 {
+  margin-bottom: 0.55rem;
+  font-size: 1rem;
+}
+.hero-note {
+  margin-top: 0.45rem;
+  padding: 0.55rem 0.7rem;
+}
+@media (max-width: 720px) {
+  .summary-grid-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .summary-card {
+    min-height: auto;
+  }
+  .summary-value {
+    font-size: 0.98rem;
+  }
+}

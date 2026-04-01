@@ -458,20 +458,20 @@ function updateHeroForDriver(driver) {
 
   if (isAdminMode) {
     heroTitle.textContent = TEXT.coordinatorTitle;
-    heroText.textContent = TEXT.coordinatorText;
+    if (heroText) heroText.textContent = TEXT.coordinatorText;
     driverField.classList.remove("hidden");
     return;
   }
 
   if (!requestedDriverRef || !driver) {
     heroTitle.textContent = TEXT.personalTitle;
-    heroText.textContent = TEXT.personalText;
+    if (heroText) heroText.textContent = TEXT.personalText;
     driverField.classList.remove("hidden");
     return;
   }
 
   heroTitle.textContent = displayName;
-  heroText.textContent = TEXT.personalText;
+  if (heroText) heroText.textContent = "";
   driverField.classList.add("hidden");
 }
 
