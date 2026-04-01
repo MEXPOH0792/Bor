@@ -43,7 +43,11 @@ const TEXT = {
   emptyFiltered: "По этому фильтру водителей нет.",
   phoneCall: "Позвонить",
   whatsappWrite: "Написать в WhatsApp",
-  collectUntilPrefix: "Собирает товар до",
+  expand: "Подробнее",
+  collapse: "Свернуть",
+  supportTelegram: "Telegram поддержки",
+  supportWhatsApp: "WhatsApp поддержки",
+  collectUntilPrefix: "ба рох мебароем",
 };
 
 const FILTERS = {
@@ -233,6 +237,33 @@ function applyFilter(drivers) {
   return filtered;
 }
 
+function closeAllDriverCards() {
+  driversGrid.querySelectorAll(".driver-card").forEach((card) => {
+    card.classList.add("is-collapsed");
+    const details = card.querySelector(".driver-card-details");
+    const toggle = card.querySelector(".card-toggle-button");
+    if (details) details.classList.add("hidden");
+    if (toggle) {
+      toggle.textContent = TEXT.expand;
+      toggle.setAttribute("aria-expanded", "false");
+    }
+  });
+}
+
+function toggleDriverCard(card) {
+  const details = card.querySelector(".driver-card-details");
+  const toggle = card.querySelector(".card-toggle-button");
+  if (!details || !toggle) return;
+  const isCollapsed = card.classList.contains("is-collapsed");
+  closeAllDriverCards();
+  if (isCollapsed) {
+    card.classList.remove("is-collapsed");
+    details.classList.remove("hidden");
+    toggle.textContent = TEXT.collapse;
+    toggle.setAttribute("aria-expanded", "true");
+  }
+}
+
 function renderDrivers(drivers) {
   driversGrid.innerHTML = "";
   updateSummary(drivers);
@@ -242,7 +273,6 @@ function renderDrivers(drivers) {
   visibleDrivers.forEach((driver) => {
     const fragment = driverCardTemplate.content.cloneNode(true);
     const card = fragment.querySelector(".driver-card");
-    const number = fragment.querySelector(".driver-number");
     const name = fragment.querySelector(".driver-name");
     const phoneText = fragment.querySelector(".driver-phone-text");
     const phoneLink = fragment.querySelector(".driver-phone-link");
@@ -256,6 +286,8 @@ function renderDrivers(drivers) {
     const statusChip = fragment.querySelector(".status-chip");
     const ageNote = fragment.querySelector(".driver-age-note");
     const alert = fragment.querySelector(".driver-alert");
+    const details = fragment.querySelector(".driver-card-details");
+    const toggleButton = fragment.querySelector(".card-toggle-button");
 
     const current = driver.current_status;
     const freshness = getFreshness(current?.updated_at);
@@ -267,7 +299,6 @@ function renderDrivers(drivers) {
     statusChip.dataset.freshness = freshness.tone;
 
     name.textContent = getDriverDisplayName(driver);
-    number.textContent = "";
     phoneText.textContent = phoneValue;
     status.textContent = createValue(getStatusLabel(current?.status));
     collectUntil.textContent = formatCollectUntil(current?.collect_until_date);
@@ -299,6 +330,14 @@ function renderDrivers(drivers) {
     } else {
       whatsappLink.removeAttribute("href");
       whatsappLink.classList.add("is-disabled");
+    }
+
+    if (details) {
+      details.classList.add("hidden");
+    }
+    if (toggleButton) {
+      toggleButton.textContent = TEXT.expand;
+      toggleButton.setAttribute("aria-expanded", "false");
     }
 
     driversGrid.appendChild(fragment);
@@ -388,6 +427,14 @@ function startAutoRefresh() {
 
 refreshButton.addEventListener("click", () => {
   loadDrivers();
+});
+
+driversGrid.addEventListener("click", (event) => {
+  const toggleButton = event.target.closest(".card-toggle-button");
+  if (!toggleButton) return;
+  const card = toggleButton.closest(".driver-card");
+  if (!card) return;
+  toggleDriverCard(card);
 });
 
 filterBar.addEventListener("click", (event) => {

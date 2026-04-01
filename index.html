@@ -68,59 +68,78 @@
         </section>
 
         <section id="driversGrid" class="drivers-grid" aria-live="polite"></section>
+
+        <section class="panel panel-tight support-panel">
+          <div class="panel-row">
+            <div>
+              <h2>Техподдержка</h2>
+              <p class="muted">Если что-то не работает или нужна помощь, напишите сразу.</p>
+            </div>
+            <div class="support-actions">
+              <a class="button button-secondary" href="https://wa.me/79133633736" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+              <a class="button button-secondary" href="https://t.me/+79133633736" target="_blank" rel="noopener noreferrer">Telegram</a>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
 
     <template id="driverCardTemplate">
-      <article class="driver-card">
-        <div class="card-top">
-          <div>
-            <p class="driver-number"></p>
-            <h3 class="driver-name"></h3>
+      <article class="driver-card is-collapsed">
+        <div class="driver-card-summary">
+          <div class="card-top">
+            <div>
+              <h3 class="driver-name"></h3>
+            </div>
+            <div class="card-badges">
+              <span class="status-chip"></span>
+              <span class="freshness-pill"></span>
+            </div>
           </div>
-          <div class="card-badges">
-            <span class="status-chip"></span>
-            <span class="freshness-pill"></span>
+
+          <div class="driver-priority">
+            <p class="driver-priority-label">Последнее место</p>
+            <p class="driver-location-main"></p>
+          </div>
+
+          <div class="driver-update-row">
+            <div>
+              <p class="driver-priority-label">Последнее обновление</p>
+              <p class="driver-updated-main"></p>
+            </div>
+            <div class="driver-summary-actions">
+              <p class="driver-age-note"></p>
+              <button class="button button-secondary card-toggle-button" type="button" aria-expanded="false">Подробнее</button>
+            </div>
           </div>
         </div>
 
-        <div class="driver-priority">
-          <p class="driver-priority-label">Последнее место</p>
-          <p class="driver-location-main"></p>
-        </div>
+        <div class="driver-card-details hidden">
+          <p class="driver-alert hidden"></p>
 
-        <div class="driver-update-row">
-          <div>
-            <p class="driver-priority-label">Последнее обновление</p>
-            <p class="driver-updated-main"></p>
-          </div>
-          <p class="driver-age-note"></p>
-        </div>
+          <dl class="driver-meta">
+            <div>
+              <dt>Телефон</dt>
+              <dd class="driver-phone-text"></dd>
+            </div>
+            <div>
+              <dt>Статус</dt>
+              <dd class="driver-status"></dd>
+            </div>
+            <div>
+              <dt>Собирает в России</dt>
+              <dd class="driver-collecting"></dd>
+            </div>
+            <div>
+              <dt>ба рох мебароем</dt>
+              <dd class="driver-collect-until"></dd>
+            </div>
+          </dl>
 
-        <p class="driver-alert hidden"></p>
-
-        <dl class="driver-meta">
-          <div>
-            <dt>Телефон</dt>
-            <dd class="driver-phone-text"></dd>
+          <div class="driver-contact-actions">
+            <a class="button button-secondary driver-phone-link" href="#">Позвонить</a>
+            <a class="button button-primary driver-whatsapp-link" href="#" target="_blank" rel="noopener noreferrer">Написать</a>
           </div>
-          <div>
-            <dt>Статус</dt>
-            <dd class="driver-status"></dd>
-          </div>
-          <div>
-            <dt>Собирает в России</dt>
-            <dd class="driver-collecting"></dd>
-          </div>
-          <div>
-            <dt>ба рох мебароем</dt>
-            <dd class="driver-collect-until"></dd>
-          </div>
-        </dl>
-
-        <div class="driver-contact-actions">
-          <a class="button button-secondary driver-phone-link" href="#">Позвонить</a>
-          <a class="button button-primary driver-whatsapp-link" href="#" target="_blank" rel="noopener noreferrer">Написать</a>
         </div>
       </article>
     </template>

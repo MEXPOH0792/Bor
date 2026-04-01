@@ -714,3 +714,74 @@ input[type="text"]:focus {
 .field input[type="date"] {
   min-height: 56px;
 }
+
+
+.driver-card-summary {
+  display: grid;
+  gap: 18px;
+}
+
+.driver-card-details {
+  display: grid;
+  gap: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.driver-card.is-collapsed .driver-card-details {
+  display: none;
+}
+
+.driver-summary-actions {
+  display: grid;
+  gap: 10px;
+  justify-items: end;
+}
+
+.card-toggle-button {
+  min-width: 132px;
+}
+
+.driver-contact-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.driver-contact-actions .button {
+  min-width: 140px;
+}
+
+.support-panel {
+  margin-top: 20px;
+}
+
+.support-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .driver-summary-actions {
+    justify-items: start;
+  }
+
+  .support-actions {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .support-actions,
+  .driver-contact-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .support-actions .button,
+  .driver-contact-actions .button,
+  .card-toggle-button {
+    width: 100%;
+  }
+}

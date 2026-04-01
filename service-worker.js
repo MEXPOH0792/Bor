@@ -1,4 +1,4 @@
-const CACHE_NAME = "bor-static-v14";
+const CACHE_NAME = "bor-static-v30";
 const STATIC_ASSETS = [
   "./",
   "./index.html",
