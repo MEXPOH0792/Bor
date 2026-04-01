@@ -692,17 +692,15 @@ input[type="text"]:focus {
 
 
 .driver-contact-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 16px;
 }
 
 .driver-contact-actions .button {
-  min-height: 46px;
-  padding: 12px 14px;
+  flex: 1 1 180px;
   justify-content: center;
-  font-size: 15px;
 }
 
 .driver-meta {
@@ -745,13 +743,13 @@ input[type="text"]:focus {
 }
 
 .driver-contact-actions {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .driver-contact-actions .button {
-  min-width: 0;
+  min-width: 140px;
 }
 
 .support-panel {
@@ -775,22 +773,201 @@ input[type="text"]:focus {
 }
 
 @media (max-width: 640px) {
-  .support-actions {
+  .support-actions,
+  .driver-contact-actions {
     width: 100%;
     flex-direction: column;
   }
 
   .support-actions .button,
+  .driver-contact-actions .button,
   .card-toggle-button {
     width: 100%;
   }
+}
 
-  .driver-contact-actions {
-    width: 100%;
+
+.hero-unified {
+  display: grid;
+  gap: 14px;
+}
+
+.hero-sync {
+  margin: 0;
+  align-self: center;
+}
+
+.hero-note {
+  margin-top: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(214, 163, 32, 0.24);
+  background: rgba(255, 249, 231, 0.94);
+  color: #6c5200;
+}
+
+.hero-note.hidden {
+  display: none;
+}
+
+.hero-inline-snapshot {
+  padding: 18px 20px;
+  border: 1px solid rgba(41, 66, 48, 0.1);
+  border-radius: 20px;
+  background: rgba(255,255,255,0.74);
+}
+
+.summary-grid-compact {
+  margin-top: 0;
+}
+
+.filter-bar-compact {
+  margin-top: 0;
+}
+
+.status-legend-compact {
+  margin-top: 0;
+}
+
+.queue-panel-row-compact {
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .hero {
+    padding: 22px 18px;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+    margin-top: 16px;
+  }
+
+  .hero-sync {
+    font-size: 0.95rem;
+  }
+
+  .status-legend-compact {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .summary-grid-compact {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
-  .driver-contact-actions .button {
+  .summary-card {
+    min-height: 88px;
+  }
+
+  .filter-bar-compact {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .filter-button {
     width: 100%;
   }
+
+  .hero-inline-snapshot {
+    padding: 16px;
+  }
+}
+
+
+/* compact top blocks */
+.hero-unified {
+  padding: 1.1rem 1rem 0.95rem;
+}
+.hero-unified .eyebrow {
+  margin-bottom: 0.3rem;
+}
+.hero-unified h1 {
+  margin-bottom: 0.35rem;
+}
+.hero-unified .hero-text {
+  margin-bottom: 0.55rem;
+  font-size: 0.95rem;
+}
+.summary-grid-compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+.summary-grid-compact .summary-card:last-child {
+  grid-column: auto;
+}
+.summary-card {
+  padding: 0.75rem 0.7rem;
+}
+.summary-label {
+  font-size: 0.76rem;
+}
+.summary-value {
+  font-size: 1.08rem;
+}
+.filter-bar-compact {
+  margin-top: 0.55rem;
+}
+.hero-inline-snapshot {
+  margin-top: 0.65rem;
+}
+.hero-inline-snapshot h2 {
+  margin-bottom: 0.55rem;
+  font-size: 1rem;
+}
+.hero-note {
+  margin-top: 0.45rem;
+  padding: 0.55rem 0.7rem;
+}
+@media (max-width: 720px) {
+  .summary-grid-compact {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .summary-card {
+    min-height: auto;
+  }
+  .summary-value {
+    font-size: 0.98rem;
+  }
+}
+
+
+.driver-last-location {
+  margin: 0.1rem 0 0;
+  padding: 0.55rem 0.8rem;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(204,214,228,0.75);
+  color: #62779c;
+  font-size: 0.96rem;
+  line-height: 1.35;
+}
+
+.hero-unified .hero-text:empty {
+  display: none;
+}
+
+.hero-unified .hero-actions {
+  margin-top: 0.15rem;
+}
+
+.hero-unified .filter-info {
+  margin: 0;
+}
+
+.hero-note {
+  font-size: 0.92rem;
+}
+
+.support-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.support-actions .button {
+  min-width: 0;
 }

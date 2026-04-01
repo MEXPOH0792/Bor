@@ -53,8 +53,7 @@ const TEXT = {
   coordinatorText:
     "Можно выбрать любого водителя из списка или перейти на его личную ссылку.",
   personalTitle: "Обновить свой статус",
-  personalText:
-    "Выберите статус и шаблон места. Если интернет пропадет, обновление будет сохранено на устройстве и отправлено позже.",
+  personalText: "",
   personalLinkLabel: "Личная ссылка",
 };
 
@@ -73,7 +72,7 @@ const queuePanel = document.querySelector("#queuePanel");
 const queueSummary = document.querySelector("#queueSummary");
 const connectionBanner = document.querySelector("#connectionBanner");
 const errorBanner = document.querySelector("#driverErrorBanner");
-const snapshot = document.querySelector("#driverSnapshot");
+const lastLocationLine = document.querySelector("#lastLocationLine");
 const heroTitle = document.querySelector("h1");
 const heroText = document.querySelector(".hero-text") ?? document.querySelector(".hero-subtitle");
 const driverField = driverSelect.closest(".field");
@@ -458,36 +457,32 @@ function updateHeroForDriver(driver) {
 
   if (isAdminMode) {
     heroTitle.textContent = TEXT.coordinatorTitle;
-    heroText.textContent = TEXT.coordinatorText;
+    if (heroText) heroText.textContent = TEXT.coordinatorText;
     driverField.classList.remove("hidden");
     return;
   }
 
   if (!requestedDriverRef || !driver) {
     heroTitle.textContent = TEXT.personalTitle;
-    heroText.textContent = TEXT.personalText;
+    if (heroText) heroText.textContent = TEXT.personalText;
     driverField.classList.remove("hidden");
     return;
   }
 
   heroTitle.textContent = displayName;
-  heroText.textContent = TEXT.personalText;
+  if (heroText) heroText.textContent = "";
   driverField.classList.add("hidden");
 }
 
 function renderSnapshot(driverId) {
+  if (!lastLocationLine) {
+    return;
+  }
+
   const selectedDriver = drivers.find((driver) => driver.id === Number(driverId));
   const current = selectedDriver?.current_status;
-  const values = [
-    getStatusLabel(current?.status) || TEXT.noData,
-    current?.location_text || TEXT.noData,
-    formatDateTime(current?.updated_at),
-    formatCollectUntil(current?.collect_until_date),
-  ];
-
-  snapshot.querySelectorAll("dd").forEach((node, index) => {
-    node.textContent = values[index];
-  });
+  const locationText = current?.location_text || TEXT.noData;
+  lastLocationLine.textContent = `Последнее местоположение: ${locationText}`;
 }
 
 function seedFormForDriver(driver) {
