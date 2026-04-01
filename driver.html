@@ -17,12 +17,17 @@
   </head>
   <body>
     <div class="page-shell page-shell-narrow">
-      <header class="hero hero-compact hero-unified">
+      <header class="hero hero-compact">
         <p class="eyebrow">Для водителей</p>
         <h1>Обновить свой статус</h1>
-        <section id="connectionBanner" class="hero-note hero-note-warning hidden" role="status"></section>
-        <section id="queuePanel" class="hero-note hero-note-warning hidden" role="status">
-          <div class="queue-panel-row queue-panel-row-compact">
+        <p class="hero-text">Выберите статус, шаблон места или свой текст. При слабом интернете обновление сохранится на телефоне и отправится позже.</p>
+      </header>
+
+      <main>
+        <section id="connectionBanner" class="panel panel-warning hidden" role="status"></section>
+
+        <section id="queuePanel" class="panel panel-warning hidden" role="status">
+          <div class="queue-panel-row">
             <div>
               <h2>Ожидают отправки</h2>
               <p id="queueSummary" class="muted">Нет отложенных обновлений.</p>
@@ -30,10 +35,6 @@
             <button id="retryQueueButton" class="button button-secondary" type="button">Отправить сейчас</button>
           </div>
         </section>
-        <p class="hero-inline-location"><span>Последнее местоположение:</span> <strong id="driverLastLocation">Нет данных</strong></p>
-      </header>
-
-      <main>
 
         <section id="adminPanel" class="panel hidden" aria-live="polite">
           <div class="panel-row">
@@ -87,6 +88,16 @@
               <a class="button button-secondary" href="./index.html">Открыть клиентскую страницу</a>
             </div>
           </form>
+        </section>
+
+        <section class="panel panel-tight">
+          <h2>Последние данные по выбранному водителю</h2>
+          <dl id="driverSnapshot" class="driver-snapshot">
+            <div><dt>Статус</dt><dd>Нет данных</dd></div>
+            <div><dt>Местоположение</dt><dd>Нет данных</dd></div>
+            <div><dt>Последнее обновление</dt><dd>Нет данных</dd></div>
+            <div><dt>ба рох мебароем</dt><dd>Нет данных</dd></div>
+          </dl>
         </section>
 
         <section class="panel panel-tight support-panel">

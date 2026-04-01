@@ -25,9 +25,9 @@ const TEXT = {
   loadErrorShort: "Ошибка загрузки",
   offlineBanner:
     "Связь слабая или отсутствует. Если загрузка не пройдет, будут показаны последние сохраненные данные с устройства.",
-  onlineBanner: "Связь есть.",
+  onlineBanner: "Связь есть. Страница обновляется автоматически.",
   cachedData:
-    "Показаны сохраненные данные устройства.",
+    "Сейчас показаны последние сохраненные данные с этого устройства.",
   justNow: "Только что",
   minutesAgo: "мин назад",
   hoursAgo: "ч назад",
@@ -37,7 +37,7 @@ const TEXT = {
   staleAlert: "Давно не обновлялся. Нужна проверка по водителю.",
   unknownAlert: "Еще нет отметки от водителя.",
   showAll: "Показаны все водители.",
-  showAttention: "Показаны водители, которых лучше проверить.",
+  showAttention: "Показаны водители, по которым нужна проверка.",
   showShaidon: "Показаны только водители со статусом «дар Шайдон».",
   showCollecting: "Показаны только водители со статусом «Россиянда бор чам карсос».",
   emptyFiltered: "По этому фильтру водителей нет.",
@@ -211,7 +211,7 @@ function updateSummary(drivers) {
   });
 
   freshCount.textContent = String(counts.fresh);
-  if (warningCount) warningCount.textContent = String(counts.warning);
+  warningCount.textContent = String(counts.warning);
   staleCount.textContent = String(counts.stale);
   shaidonCount.textContent = String(counts.shaidon);
 }

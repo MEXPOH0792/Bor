@@ -73,7 +73,7 @@ const queuePanel = document.querySelector("#queuePanel");
 const queueSummary = document.querySelector("#queueSummary");
 const connectionBanner = document.querySelector("#connectionBanner");
 const errorBanner = document.querySelector("#driverErrorBanner");
-const driverLastLocation = document.querySelector("#driverLastLocation");
+const snapshot = document.querySelector("#driverSnapshot");
 const heroTitle = document.querySelector("h1");
 const heroText = document.querySelector(".hero-text") ?? document.querySelector(".hero-subtitle");
 const driverField = driverSelect.closest(".field");
@@ -458,30 +458,36 @@ function updateHeroForDriver(driver) {
 
   if (isAdminMode) {
     heroTitle.textContent = TEXT.coordinatorTitle;
-    if (heroText) heroText.textContent = TEXT.coordinatorText;
+    heroText.textContent = TEXT.coordinatorText;
     driverField.classList.remove("hidden");
     return;
   }
 
   if (!requestedDriverRef || !driver) {
     heroTitle.textContent = TEXT.personalTitle;
-    if (heroText) heroText.textContent = TEXT.personalText;
+    heroText.textContent = TEXT.personalText;
     driverField.classList.remove("hidden");
     return;
   }
 
   heroTitle.textContent = displayName;
-  if (heroText) heroText.textContent = "";
+  heroText.textContent = TEXT.personalText;
   driverField.classList.add("hidden");
 }
 
 function renderSnapshot(driverId) {
   const selectedDriver = drivers.find((driver) => driver.id === Number(driverId));
   const current = selectedDriver?.current_status;
+  const values = [
+    getStatusLabel(current?.status) || TEXT.noData,
+    current?.location_text || TEXT.noData,
+    formatDateTime(current?.updated_at),
+    formatCollectUntil(current?.collect_until_date),
+  ];
 
-  if (driverLastLocation) {
-    driverLastLocation.textContent = current?.location_text || TEXT.noData;
-  }
+  snapshot.querySelectorAll("dd").forEach((node, index) => {
+    node.textContent = values[index];
+  });
 }
 
 function seedFormForDriver(driver) {

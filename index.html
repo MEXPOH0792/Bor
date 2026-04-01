@@ -17,33 +17,50 @@
   </head>
   <body>
     <div class="page-shell">
-      <header class="hero hero-unified">
+      <header class="hero">
         <p class="eyebrow">Грузоперевозки</p>
         <h1>Отслеживание водителей</h1>
-        <p class="hero-text">Статус, место и время обновления — сразу на одном экране.</p>
+        <p class="hero-text">
+          Последнее место, статус и время обновления по каждому водителю. Всё видно сразу и удобно на телефоне.
+        </p>
         <div class="hero-actions">
           <button id="refreshButton" class="button button-primary" type="button">
             Обновить данные
           </button>
-          <p id="syncInfo" class="hero-sync muted">Ожидание загрузки...</p>
         </div>
-        <section id="connectionBanner" class="hero-note hero-note-warning hidden" role="status"></section>
-        <section id="cacheBanner" class="hero-note hero-note-warning hidden" role="status"></section>
-        <div id="summaryGrid" class="summary-grid summary-grid-compact" aria-live="polite">
-          <article class="summary-card"><span class="summary-label">Свежие</span><strong id="freshCount" class="summary-value">0</strong></article>
-          <article class="summary-card"><span class="summary-label">Давно без обновления</span><strong id="staleCount" class="summary-value">0</strong></article>
-          <article class="summary-card"><span class="summary-label">дар Шайдон</span><strong id="shaidonCount" class="summary-value">0</strong></article>
+        <div class="status-legend" aria-label="Легенда свежести">
+          <span class="legend-item"><span class="legend-dot legend-fresh"></span>Меньше 2 часов</span>
+          <span class="legend-item"><span class="legend-dot legend-warning"></span>От 2 до 8 часов</span>
+          <span class="legend-item"><span class="legend-dot legend-stale"></span>Больше 8 часов</span>
         </div>
-        <div id="filterBar" class="filter-bar filter-bar-compact" aria-label="Фильтры водителей">
-          <button class="filter-button is-active" type="button" data-filter="all">Все</button>
-          <button class="filter-button" type="button" data-filter="attention">Проверить</button>
-          <button class="filter-button" type="button" data-filter="shaidon">дар Шайдон</button>
-          <button class="filter-button" type="button" data-filter="collecting">Россиянда бор чам карсос</button>
-        </div>
-        <p id="filterInfo" class="filter-info muted">Показаны все водители.</p>
       </header>
 
       <main>
+        <section id="connectionBanner" class="panel panel-warning hidden" role="status"></section>
+        <section id="cacheBanner" class="panel panel-warning hidden" role="status"></section>
+
+        <section class="panel panel-tight">
+          <div class="panel-row">
+            <div>
+              <h2>Сводка по водителям</h2>
+              <p class="muted">Сначала смотрите место и время обновления, затем статус.</p>
+            </div>
+            <p id="syncInfo" class="muted">Ожидание загрузки...</p>
+          </div>
+          <div id="summaryGrid" class="summary-grid" aria-live="polite">
+            <article class="summary-card"><span class="summary-label">Свежие</span><strong id="freshCount" class="summary-value">0</strong></article>
+            <article class="summary-card"><span class="summary-label">Нужно проверить</span><strong id="warningCount" class="summary-value">0</strong></article>
+            <article class="summary-card"><span class="summary-label">Давно без обновления</span><strong id="staleCount" class="summary-value">0</strong></article>
+            <article class="summary-card"><span class="summary-label">дар Шайдон</span><strong id="shaidonCount" class="summary-value">0</strong></article>
+          </div>
+          <div id="filterBar" class="filter-bar" aria-label="Фильтры водителей">
+            <button class="filter-button is-active" type="button" data-filter="all">Все</button>
+            <button class="filter-button" type="button" data-filter="attention">Нужна проверка</button>
+            <button class="filter-button" type="button" data-filter="shaidon">дар Шайдон</button>
+            <button class="filter-button" type="button" data-filter="collecting">Россиянда бор чам карсос</button>
+          </div>
+          <p id="filterInfo" class="filter-info muted">Показаны все водители.</p>
+        </section>
 
         <section id="errorBanner" class="panel panel-error hidden" role="alert"></section>
         <section id="emptyState" class="panel panel-tight hidden" role="status">
