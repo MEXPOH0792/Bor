@@ -971,3 +971,30 @@ input[type="text"]:focus {
 .support-actions .button {
   min-width: 0;
 }
+
+
+/* compact action buttons in expanded driver card */
+.driver-contact-actions .button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 14px;
+  font-size: 0.96rem;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+@media (max-width: 640px) {
+  .driver-contact-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .driver-contact-actions .button {
+    width: 100%;
+    min-height: 42px;
+    padding: 0 10px;
+    font-size: 15px;
+  }
+}
