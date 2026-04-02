@@ -52,11 +52,6 @@ export const DRIVER_PROFILES = {
     collectInShaidon: "Назди Азизхуча",
     unloadInShaidon: "Назди Азизхуча",
   },
-  4: {
-    name: "Эрач",
-    collectInShaidon: "Хонаи Эрач",
-    unloadInShaidon: "Хонаи Эрач",
-  },
 };
 
 const TEXT = {

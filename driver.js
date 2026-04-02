@@ -55,6 +55,7 @@ const TEXT = {
   personalTitle: "Обновить свой статус",
   personalText: "",
   personalLinkLabel: "Личная ссылка",
+  driverMissing: "Этот водитель удален или больше недоступен.",
 };
 
 const form = document.querySelector("#driverForm");
@@ -99,6 +100,19 @@ function setError(message) {
 function clearError() {
   errorBanner.textContent = "";
   errorBanner.classList.add("hidden");
+}
+
+function disableFormBecauseDriverMissing() {
+  setError(TEXT.driverMissing);
+
+  driverSelect.value = "";
+  driverSelect.disabled = true;
+  statusSelect.disabled = true;
+  locationTemplateSelect.disabled = true;
+  locationInput.disabled = true;
+  collectUntilInput.disabled = true;
+  geoButton.disabled = true;
+  submitButton.disabled = true;
 }
 
 function loadQueue() {
@@ -578,6 +592,8 @@ async function loadFormData() {
   submitButton.disabled = true;
   updateSubmitUi();
 
+  let keepFormDisabled = false;
+
   try {
     assertSupabaseConfigured();
     clearError();
@@ -587,6 +603,16 @@ async function loadFormData() {
     renderAdminLinks(drivers);
 
     const requestedDriver = findRequestedDriver();
+
+    if (!isAdminMode && requestedDriverRef && !requestedDriver) {
+      updateHeroForDriver(null);
+      renderSnapshot("");
+      disableFormBecauseDriverMissing();
+      updateQueuePanel();
+      keepFormDisabled = true;
+      return;
+    }
+
     const initialDriver =
       (!isAdminMode && requestedDriver) ||
       getSelectedDriver() ||
@@ -615,8 +641,10 @@ async function loadFormData() {
     restoreDraft();
     updateQueuePanel();
   } finally {
-    submitButton.disabled = false;
-    updateSubmitUi();
+    if (!keepFormDisabled) {
+      submitButton.disabled = false;
+      updateSubmitUi();
+    }
   }
 }
 

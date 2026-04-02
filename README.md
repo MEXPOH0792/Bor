@@ -47,7 +47,6 @@ README.md
 - `1` — Ахлиддин
 - `2` — Аслиддин
 - `3` — Джамшед
-- `4` — Эрач
 
 ## Шаблоны мест
 
@@ -63,7 +62,6 @@ README.md
 - Ахлиддин — `Гаражи Зариф (кумур фуруш)`
 - Аслиддин — `Се кучаги лаби сой`
 - Джамшед — `Назди Азизхуча`
-- Эрач — `Хонаи Эрач`
 
 ## 1. Как создать проект Supabase
 
@@ -100,11 +98,14 @@ insert into public.drivers (number, name, phone)
 values
   (1, 'Ахлиддин', '+7 900 000-00-01'),
   (2, 'Аслиддин', '+7 900 000-00-02'),
-  (3, 'Джамшед', '+7 900 000-00-03'),
-  (4, 'Эрач', '+7 900 000-00-04')
+  (3, 'Джамшед', '+7 900 000-00-03')
 on conflict (number) do update set
   name = excluded.name,
   phone = excluded.phone;
+
+-- удалить водителя №4 (Эрач) и его статус
+delete from public.drivers
+where number = 4;
 
 alter table public.drivers enable row level security;
 alter table public.driver_status enable row level security;
@@ -272,7 +273,6 @@ powershell -ExecutionPolicy Bypass -File .\icons\build-icons.ps1
 - Ахлиддин — `driver.html?driver_number=1`
 - Аслиддин — `driver.html?driver_number=2`
 - Джамшед — `driver.html?driver_number=3`
-- Эрач — `driver.html?driver_number=4`
 
 ## Скрытый режим координатора
 
