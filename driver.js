@@ -21,41 +21,41 @@ const DRAFT_KEY = "bor-driver-draft-v1";
 const CUSTOM_TEMPLATE = "__custom__";
 
 const TEXT = {
-  chooseSelf: "Выберите себя",
-  noData: "Нет данных",
-  chooseTemplate: "Выберите шаблон",
-  customTemplate: "Свой текст",
-  geoUnsupported: "Геолокация не поддерживается в этом браузере.",
-  geoLoading: "Запрашиваю координаты...",
-  geoSaved: "Координаты сохранены",
-  geoFailed: "Не удалось получить координаты. Продолжайте без них.",
-  chooseDriver: "Сначала выберите водителя.",
-  enterLocation: "Введите местоположение текстом.",
-  submitting: "Отправка...",
-  submitOnline: "Обновить",
-  submitOffline: "Сохранить на телефоне",
-  sentWithGeo: "Обновление отправлено. Последние координаты сохранены в базе.",
-  sentWithoutGeo: "Обновление отправлено без координат.",
+  chooseSelf: "Р’С‹Р±РµСЂРёС‚Рµ СЃРµР±СЏ",
+  noData: "РќРµС‚ РґР°РЅРЅС‹С…",
+  chooseTemplate: "Р’С‹Р±РµСЂРёС‚Рµ С€Р°Р±Р»РѕРЅ",
+  customTemplate: "РЎРІРѕР№ С‚РµРєСЃС‚",
+  geoUnsupported: "Р“РµРѕР»РѕРєР°С†РёСЏ РЅРµ РїРѕРґРґРµСЂР¶РёРІР°РµС‚СЃСЏ РІ СЌС‚РѕРј Р±СЂР°СѓР·РµСЂРµ.",
+  geoLoading: "Р—Р°РїСЂР°С€РёРІР°СЋ РєРѕРѕСЂРґРёРЅР°С‚С‹...",
+  geoSaved: "РљРѕРѕСЂРґРёРЅР°С‚С‹ СЃРѕС…СЂР°РЅРµРЅС‹",
+  geoFailed: "РќРµ СѓРґР°Р»РѕСЃСЊ РїРѕР»СѓС‡РёС‚СЊ РєРѕРѕСЂРґРёРЅР°С‚С‹. РџСЂРѕРґРѕР»Р¶Р°Р№С‚Рµ Р±РµР· РЅРёС….",
+  chooseDriver: "РЎРЅР°С‡Р°Р»Р° РІС‹Р±РµСЂРёС‚Рµ РІРѕРґРёС‚РµР»СЏ.",
+  enterLocation: "Р’РІРµРґРёС‚Рµ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ С‚РµРєСЃС‚РѕРј.",
+  submitting: "РћС‚РїСЂР°РІРєР°...",
+  submitOnline: "РћР±РЅРѕРІРёС‚СЊ",
+  submitOffline: "РЎРѕС…СЂР°РЅРёС‚СЊ РЅР° С‚РµР»РµС„РѕРЅРµ",
+  sentWithGeo: "РћР±РЅРѕРІР»РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ. РџРѕСЃР»РµРґРЅРёРµ РєРѕРѕСЂРґРёРЅР°С‚С‹ СЃРѕС…СЂР°РЅРµРЅС‹ РІ Р±Р°Р·Рµ.",
+  sentWithoutGeo: "РћР±РЅРѕРІР»РµРЅРёРµ РѕС‚РїСЂР°РІР»РµРЅРѕ Р±РµР· РєРѕРѕСЂРґРёРЅР°С‚.",
   savedOffline:
-    "Интернет слабый. Обновление сохранено на устройстве и будет отправлено при появлении связи.",
-  loadDriversFailed: "Не удалось загрузить список водителей.",
-  updateFailed: "Не удалось обновить статус. Проверьте настройки Supabase.",
-  onlineBanner: "Связь есть. Можно отправлять обновления сразу.",
+    "РРЅС‚РµСЂРЅРµС‚ СЃР»Р°Р±С‹Р№. РћР±РЅРѕРІР»РµРЅРёРµ СЃРѕС…СЂР°РЅРµРЅРѕ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІРµ Рё Р±СѓРґРµС‚ РѕС‚РїСЂР°РІР»РµРЅРѕ РїСЂРё РїРѕСЏРІР»РµРЅРёРё СЃРІСЏР·Рё.",
+  loadDriversFailed: "РќРµ СѓРґР°Р»РѕСЃСЊ Р·Р°РіСЂСѓР·РёС‚СЊ СЃРїРёСЃРѕРє РІРѕРґРёС‚РµР»РµР№.",
+  updateFailed: "РќРµ СѓРґР°Р»РѕСЃСЊ РѕР±РЅРѕРІРёС‚СЊ СЃС‚Р°С‚СѓСЃ. РџСЂРѕРІРµСЂСЊС‚Рµ РЅР°СЃС‚СЂРѕР№РєРё Supabase.",
+  onlineBanner: "РЎРІСЏР·СЊ РµСЃС‚СЊ. РњРѕР¶РЅРѕ РѕС‚РїСЂР°РІР»СЏС‚СЊ РѕР±РЅРѕРІР»РµРЅРёСЏ СЃСЂР°Р·Сѓ.",
   offlineBanner:
-    "Связь слабая или отсутствует. Обновления будут временно сохраняться на устройстве.",
-  queueEmpty: "Нет отложенных обновлений.",
-  queueCount: "Не отправлено обновлений",
-  queueRetrying: "Пробую отправить сохраненные обновления...",
-  draftRestored: "Черновик формы восстановлен с этого устройства.",
-  submitHintOnline: "При слабом интернете обновление сначала сохранится на устройстве.",
-  submitHintOffline: "Сейчас связи нет. Кнопка сохранит обновление на этом телефоне.",
-  coordinatorTitle: "Режим координатора",
+    "РЎРІСЏР·СЊ СЃР»Р°Р±Р°СЏ РёР»Рё РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚. РћР±РЅРѕРІР»РµРЅРёСЏ Р±СѓРґСѓС‚ РІСЂРµРјРµРЅРЅРѕ СЃРѕС…СЂР°РЅСЏС‚СЊСЃСЏ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІРµ.",
+  queueEmpty: "РќРµС‚ РѕС‚Р»РѕР¶РµРЅРЅС‹С… РѕР±РЅРѕРІР»РµРЅРёР№.",
+  queueCount: "РќРµ РѕС‚РїСЂР°РІР»РµРЅРѕ РѕР±РЅРѕРІР»РµРЅРёР№",
+  queueRetrying: "РџСЂРѕР±СѓСЋ РѕС‚РїСЂР°РІРёС‚СЊ СЃРѕС…СЂР°РЅРµРЅРЅС‹Рµ РѕР±РЅРѕРІР»РµРЅРёСЏ...",
+  draftRestored: "Р§РµСЂРЅРѕРІРёРє С„РѕСЂРјС‹ РІРѕСЃСЃС‚Р°РЅРѕРІР»РµРЅ СЃ СЌС‚РѕРіРѕ СѓСЃС‚СЂРѕР№СЃС‚РІР°.",
+  submitHintOnline: "РџСЂРё СЃР»Р°Р±РѕРј РёРЅС‚РµСЂРЅРµС‚Рµ РѕР±РЅРѕРІР»РµРЅРёРµ СЃРЅР°С‡Р°Р»Р° СЃРѕС…СЂР°РЅРёС‚СЃСЏ РЅР° СѓСЃС‚СЂРѕР№СЃС‚РІРµ.",
+  submitHintOffline: "РЎРµР№С‡Р°СЃ СЃРІСЏР·Рё РЅРµС‚. РљРЅРѕРїРєР° СЃРѕС…СЂР°РЅРёС‚ РѕР±РЅРѕРІР»РµРЅРёРµ РЅР° СЌС‚РѕРј С‚РµР»РµС„РѕРЅРµ.",
+  coordinatorTitle: "Р РµР¶РёРј РєРѕРѕСЂРґРёРЅР°С‚РѕСЂР°",
   coordinatorText:
-    "Можно выбрать любого водителя из списка или перейти на его личную ссылку.",
-  personalTitle: "Обновить свой статус",
+    "РњРѕР¶РЅРѕ РІС‹Р±СЂР°С‚СЊ Р»СЋР±РѕРіРѕ РІРѕРґРёС‚РµР»СЏ РёР· СЃРїРёСЃРєР° РёР»Рё РїРµСЂРµР№С‚Рё РЅР° РµРіРѕ Р»РёС‡РЅСѓСЋ СЃСЃС‹Р»РєСѓ.",
+  personalTitle: "РћР±РЅРѕРІРёС‚СЊ СЃРІРѕР№ СЃС‚Р°С‚СѓСЃ",
   personalText: "",
-  personalLinkLabel: "Личная ссылка",
-  driverMissing: "Этот водитель удален или больше недоступен.",
+  personalLinkLabel: "Р›РёС‡РЅР°СЏ СЃСЃС‹Р»РєР°",
+  driverMissing: "Р­С‚РѕС‚ РІРѕРґРёС‚РµР»СЊ СѓРґР°Р»РµРЅ РёР»Рё Р±РѕР»СЊС€Рµ РЅРµРґРѕСЃС‚СѓРїРµРЅ.",
 };
 
 const form = document.querySelector("#driverForm");
@@ -166,7 +166,7 @@ function updateQueuePanel() {
   if (queue.length) {
     const latest = queue[queue.length - 1];
     summaryParts.push(
-      `${TEXT.queueCount}: ${queue.length}. Последнее сохранение: ${formatDateTime(
+      `${TEXT.queueCount}: ${queue.length}. РџРѕСЃР»РµРґРЅРµРµ СЃРѕС…СЂР°РЅРµРЅРёРµ: ${formatDateTime(
         latest.savedAt
       )}`
     );
@@ -496,7 +496,7 @@ function renderSnapshot(driverId) {
   const selectedDriver = drivers.find((driver) => driver.id === Number(driverId));
   const current = selectedDriver?.current_status;
   const locationText = current?.location_text || TEXT.noData;
-  lastLocationLine.textContent = `Последнее местоположение: ${locationText}`;
+  lastLocationLine.textContent = `РџРѕСЃР»РµРґРЅРµРµ РјРµСЃС‚РѕРїРѕР»РѕР¶РµРЅРёРµ: ${locationText}`;
 }
 
 function seedFormForDriver(driver) {
@@ -543,7 +543,19 @@ async function registerServiceWorker() {
 }
 
 async function sendUpdate(payload) {
-  const { error } = await supabase.rpc("update_driver_status_simple", payload);
+  let { error } = await supabase.rpc("update_driver_status_simple", payload);
+
+  const message = String(error?.message || "");
+  const canRetryWithoutCollectUntil =
+    payload.p_collect_until_date !== undefined &&
+    /p_collect_until_date|function public\.update_driver_status_simple|does not exist|No function matches/i.test(
+      message
+    );
+
+  if (error && canRetryWithoutCollectUntil) {
+    const { p_collect_until_date, ...legacyPayload } = payload;
+    ({ error } = await supabase.rpc("update_driver_status_simple", legacyPayload));
+  }
 
   if (error) {
     throw error;
@@ -592,8 +604,6 @@ async function loadFormData() {
   submitButton.disabled = true;
   updateSubmitUi();
 
-  let keepFormDisabled = false;
-
   try {
     assertSupabaseConfigured();
     clearError();
@@ -603,16 +613,6 @@ async function loadFormData() {
     renderAdminLinks(drivers);
 
     const requestedDriver = findRequestedDriver();
-
-    if (!isAdminMode && requestedDriverRef && !requestedDriver) {
-      updateHeroForDriver(null);
-      renderSnapshot("");
-      disableFormBecauseDriverMissing();
-      updateQueuePanel();
-      keepFormDisabled = true;
-      return;
-    }
-
     const initialDriver =
       (!isAdminMode && requestedDriver) ||
       getSelectedDriver() ||
@@ -641,10 +641,8 @@ async function loadFormData() {
     restoreDraft();
     updateQueuePanel();
   } finally {
-    if (!keepFormDisabled) {
-      submitButton.disabled = false;
-      updateSubmitUi();
-    }
+    submitButton.disabled = false;
+    updateSubmitUi();
   }
 }
 
