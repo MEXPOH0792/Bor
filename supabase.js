@@ -3,12 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es20
 export const SUPABASE_URL = "https://wfagftibcjlouxftzevc.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_y3kAiWOXJWjPwHFidUYA1A_inltPpUL";
 
-export const STATUS_COLLECTING_IN_RUSSIA = "собирает в России";
-export const STATUS_IN_TRANSIT = "в пути";
-export const STATUS_AT_BORDER = "на границе";
-export const STATUS_IN_SHAIDON = "в Шайдоне";
-export const STATUS_UNLOADING = "разгружает";
-export const STATUS_OFFLINE = "не на связи";
+export const STATUS_COLLECTING_IN_RUSSIA = "СЃРѕР±РёСЂР°РµС‚ РІ Р РѕСЃСЃРёРё";
+export const STATUS_IN_TRANSIT = "РІ РїСѓС‚Рё";
+export const STATUS_AT_BORDER = "РЅР° РіСЂР°РЅРёС†Рµ";
+export const STATUS_IN_SHAIDON = "РІ РЁР°Р№РґРѕРЅРµ";
+export const STATUS_UNLOADING = "СЂР°Р·РіСЂСѓР¶Р°РµС‚";
+export const STATUS_OFFLINE = "РЅРµ РЅР° СЃРІСЏР·Рё";
 
 export const DRIVER_STATUSES = [
   STATUS_COLLECTING_IN_RUSSIA,
@@ -20,48 +20,58 @@ export const DRIVER_STATUSES = [
 ];
 
 export const STATUS_LABELS = {
-  [STATUS_COLLECTING_IN_RUSSIA]: "Россиянда бор чам карсос",
-  [STATUS_IN_TRANSIT]: "дар рох",
-  [STATUS_AT_BORDER]: "Границанда",
-  [STATUS_IN_SHAIDON]: "дар Шайдон",
-  [STATUS_UNLOADING]: "бор таксим карсос",
-  [STATUS_OFFLINE]: "не на связи",
+  [STATUS_COLLECTING_IN_RUSSIA]: "Р РѕСЃСЃРёСЏРЅРґР° Р±РѕСЂ С‡Р°Рј РєР°СЂСЃРѕСЃ",
+  [STATUS_IN_TRANSIT]: "РґР°СЂ СЂРѕС…",
+  [STATUS_AT_BORDER]: "Р“СЂР°РЅРёС†Р°РЅРґР°",
+  [STATUS_IN_SHAIDON]: "РґР°СЂ РЁР°Р№РґРѕРЅ",
+  [STATUS_UNLOADING]: "Р±РѕСЂ С‚Р°РєСЃРёРј РєР°СЂСЃРѕСЃ",
+  [STATUS_OFFLINE]: "РЅРµ РЅР° СЃРІСЏР·Рё",
 };
 
 export function getStatusLabel(status) {
   return STATUS_LABELS[status] ?? status ?? "";
 }
 
-export const RUSSIA_COLLECT_POINT = "ВДНХ";
-export const RUSSIA_UNLOAD_POINT = "Есенина 109";
-export const ROUTE_POINTS = ["Узбекистон", "Казок"];
+export const RUSSIA_COLLECT_POINT = "Р’Р”РќРҐ";
+export const RUSSIA_UNLOAD_POINT = "Р•СЃРµРЅРёРЅР° 109";
+export const ROUTE_POINTS = ["РЈР·Р±РµРєРёСЃС‚РѕРЅ", "РљР°Р·РѕРє"];
 
 export const DRIVER_PROFILES = {
   1: {
-    name: "Ахлиддин",
-    collectInShaidon: "Зарифи кумур фуруш",
-    unloadInShaidon: "Бозори кухна",
+    name: "РђС…Р»РёРґРґРёРЅ",
+    collectInShaidon: "Р—Р°СЂРёС„Рё РєСѓРјСѓСЂ С„СѓСЂСѓС€",
+    unloadInShaidon: "Р‘РѕР·РѕСЂРё РєСѓС…РЅР°",
   },
   2: {
-    name: "Аслиддин",
-    collectInShaidon: "Се кучаги лаби сой",
-    unloadInShaidon: "Се кучаги лаби сой",
+    name: "РђСЃР»РёРґРґРёРЅ",
+    collectInShaidon: "РЎРµ РєСѓС‡Р°РіРё Р»Р°Р±Рё СЃРѕР№",
+    unloadInShaidon: "РЎРµ РєСѓС‡Р°РіРё Р»Р°Р±Рё СЃРѕР№",
   },
   3: {
-    name: "Джамшед",
-    collectInShaidon: "Назди Азизхуча",
-    unloadInShaidon: "Назди Азизхуча",
+    name: "Р”Р¶Р°РјС€РµРґ",
+    collectInShaidon: "РќР°Р·РґРё РђР·РёР·С…СѓС‡Р°",
+    unloadInShaidon: "РќР°Р·РґРё РђР·РёР·С…СѓС‡Р°",
+  },
+  4: {
+    name: "Р­СЂР°С‡",
+    collectInShaidon: "РҐРѕРЅР°Рё Р­СЂР°С‡",
+    unloadInShaidon: "РҐРѕРЅР°Рё Р­СЂР°С‡",
   },
 };
 
+function isMissingCollectUntilColumnError(error) {
+  const message = String(error?.message || "");
+  return /collect_until_date/i.test(message) && /(column|schema cache|does not exist)/i.test(message);
+}
+
 const TEXT = {
-  configureSupabase: "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
-  noUpdate: "Нет обновления",
-  noData: "Нет данных",
-  fresh: "Свежо",
-  warning: "Нужно обновить",
-  stale: "Старое обновление",
-  collectUntilNoDate: "Не указано",
+  configureSupabase: "РЎРЅР°С‡Р°Р»Р° РІСЃС‚Р°РІСЊС‚Рµ Supabase URL Рё publishable key РІ С„Р°Р№Р» supabase.js.",
+  noUpdate: "РќРµС‚ РѕР±РЅРѕРІР»РµРЅРёСЏ",
+  noData: "РќРµС‚ РґР°РЅРЅС‹С…",
+  fresh: "РЎРІРµР¶Рѕ",
+  warning: "РќСѓР¶РЅРѕ РѕР±РЅРѕРІРёС‚СЊ",
+  stale: "РЎС‚Р°СЂРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ",
+  collectUntilNoDate: "РќРµ СѓРєР°Р·Р°РЅРѕ",
 };
 
 const isConfigured =
@@ -107,7 +117,7 @@ export function getDriverDisplayName(driver) {
     return profile.name;
   }
 
-  if (rawName && !/^Водитель\s+\d+$/i.test(rawName)) {
+  if (rawName && !/^Р’РѕРґРёС‚РµР»СЊ\s+\d+$/i.test(rawName)) {
     return rawName;
   }
 
@@ -127,12 +137,12 @@ export function getLocationTemplateGroups(driver) {
   }
 
   const groups = [
-    { label: "Россия", options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT] },
-    { label: "Маршрут", options: ROUTE_POINTS },
+    { label: "Р РѕСЃСЃРёСЏ", options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT] },
+    { label: "РњР°СЂС€СЂСѓС‚", options: ROUTE_POINTS },
   ];
 
   if (shaidonOptions.length) {
-    groups.push({ label: "Шайдон / точка водителя", options: shaidonOptions });
+    groups.push({ label: "РЁР°Р№РґРѕРЅ / С‚РѕС‡РєР° РІРѕРґРёС‚РµР»СЏ", options: shaidonOptions });
   }
 
   return groups;
@@ -184,23 +194,42 @@ export function buildDriverPageLink(driver) {
 export async function fetchDrivers() {
   assertSupabaseConfigured();
 
-  const [driversResult, statusesResult] = await Promise.all([
-    supabase
-      .from("drivers")
-      .select("id, number, name, phone, is_active")
-      .eq("is_active", true)
-      .order("number", { ascending: true }),
-    supabase
-      .from("driver_status")
-      .select(
-        "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at, collect_until_date"
-      )
-      .order("updated_at", { ascending: false })
-      .order("id", { ascending: false }),
-  ]);
+  const driversResult = await supabase
+    .from("drivers")
+    .select("id, number, name, phone, is_active")
+    .eq("is_active", true)
+    .order("number", { ascending: true });
 
   if (driversResult.error) {
     throw driversResult.error;
+  }
+
+  let statusesResult = await supabase
+    .from("driver_status")
+    .select(
+      "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at, collect_until_date"
+    )
+    .order("updated_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (isMissingCollectUntilColumnError(statusesResult.error)) {
+    statusesResult = await supabase
+      .from("driver_status")
+      .select(
+        "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
+      )
+      .order("updated_at", { ascending: false })
+      .order("id", { ascending: false });
+
+    if (!statusesResult.error) {
+      statusesResult = {
+        ...statusesResult,
+        data: (statusesResult.data ?? []).map((item) => ({
+          ...item,
+          collect_until_date: null,
+        })),
+      };
+    }
   }
 
   if (statusesResult.error) {
