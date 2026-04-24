@@ -3,12 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es20
 export const SUPABASE_URL = "https://wfagftibcjlouxftzevc.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_y3kAiWOXJWjPwHFidUYA1A_inltPpUL";
 
-export const STATUS_COLLECTING_IN_RUSSIA = "СЃРѕР±РёСЂР°РµС‚ РІ Р РѕСЃСЃРёРё";
-export const STATUS_IN_TRANSIT = "РІ РїСѓС‚Рё";
-export const STATUS_AT_BORDER = "РЅР° РіСЂР°РЅРёС†Рµ";
-export const STATUS_IN_SHAIDON = "РІ РЁР°Р№РґРѕРЅРµ";
-export const STATUS_UNLOADING = "СЂР°Р·РіСЂСѓР¶Р°РµС‚";
-export const STATUS_OFFLINE = "РЅРµ РЅР° СЃРІСЏР·Рё";
+export const STATUS_COLLECTING_IN_RUSSIA = "собирает в России";
+export const STATUS_IN_TRANSIT = "в пути";
+export const STATUS_AT_BORDER = "на границе";
+export const STATUS_IN_SHAIDON = "в Шайдоне";
+export const STATUS_UNLOADING = "разгружает";
+export const STATUS_OFFLINE = "не на связи";
 
 export const DRIVER_STATUSES = [
   STATUS_COLLECTING_IN_RUSSIA,
@@ -19,43 +19,77 @@ export const DRIVER_STATUSES = [
   STATUS_OFFLINE,
 ];
 
-export const STATUS_LABELS = {
-  [STATUS_COLLECTING_IN_RUSSIA]: "Р РѕСЃСЃРёСЏРЅРґР° Р±РѕСЂ С‡Р°Рј РєР°СЂСЃРѕСЃ",
-  [STATUS_IN_TRANSIT]: "РґР°СЂ СЂРѕС…",
-  [STATUS_AT_BORDER]: "Р“СЂР°РЅРёС†Р°РЅРґР°",
-  [STATUS_IN_SHAIDON]: "РґР°СЂ РЁР°Р№РґРѕРЅ",
-  [STATUS_UNLOADING]: "Р±РѕСЂ С‚Р°РєСЃРёРј РєР°СЂСЃРѕСЃ",
-  [STATUS_OFFLINE]: "РЅРµ РЅР° СЃРІСЏР·Рё",
+const LEGACY_STATUS_MAP = {
+  "СЃРѕР±РёСЂР°РµС‚ РІ Р РѕСЃСЃРёРё": STATUS_COLLECTING_IN_RUSSIA,
+  "РІ РїСѓС‚Рё": STATUS_IN_TRANSIT,
+  "РЅР° РіСЂР°РЅРёС†Рµ": STATUS_AT_BORDER,
+  "РІ РЁР°Р№РґРѕРЅРµ": STATUS_IN_SHAIDON,
+  "СЂР°Р·РіСЂСѓР¶Р°РµС‚": STATUS_UNLOADING,
+  "РЅРµ РЅР° СЃРІСЏР·Рё": STATUS_OFFLINE,
 };
 
-export function getStatusLabel(status) {
-  return STATUS_LABELS[status] ?? status ?? "";
+export const STATUS_LABELS = {
+  [STATUS_COLLECTING_IN_RUSSIA]: "Россиянда бор чам карсос",
+  [STATUS_IN_TRANSIT]: "дар роҳ",
+  [STATUS_AT_BORDER]: "Границаанда",
+  [STATUS_IN_SHAIDON]: "дар Шайдон",
+  [STATUS_UNLOADING]: "бор таксим карсос",
+  [STATUS_OFFLINE]: "не на связи",
+};
+
+export function repairBrokenCyrillic(value) {
+  if (typeof value !== "string" || !value) {
+    return value ?? "";
+  }
+
+  try {
+    const bytes = Uint8Array.from(Array.from(value, (char) => char.charCodeAt(0) & 0xff));
+    const decoded = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+
+    if (decoded.length < value.length && /[А-Яа-яЁёҚқҒғҲҳӮӯІі]/u.test(decoded)) {
+      return decoded;
+    }
+  } catch {
+    // Keep original value when text is already valid or not recoverable.
+  }
+
+  return value;
 }
 
-export const RUSSIA_COLLECT_POINT = "Р’Р”РќРҐ";
-export const RUSSIA_UNLOAD_POINT = "Р•СЃРµРЅРёРЅР° 109";
-export const ROUTE_POINTS = ["РЈР·Р±РµРєРёСЃС‚РѕРЅ", "РљР°Р·РѕРє"];
+export function normalizeStatus(status) {
+  const repairedStatus = repairBrokenCyrillic(status);
+  return LEGACY_STATUS_MAP[repairedStatus] ?? repairedStatus ?? "";
+}
+
+export function getStatusLabel(status) {
+  const normalizedStatus = normalizeStatus(status);
+  return STATUS_LABELS[normalizedStatus] ?? normalizedStatus ?? "";
+}
+
+export const RUSSIA_COLLECT_POINT = "ВДНХ";
+export const RUSSIA_UNLOAD_POINT = "Есенина 109";
+export const ROUTE_POINTS = ["Узбекистон", "Казок"];
 
 export const DRIVER_PROFILES = {
   1: {
-    name: "РђС…Р»РёРґРґРёРЅ",
-    collectInShaidon: "Р—Р°СЂРёС„Рё РєСѓРјСѓСЂ С„СѓСЂСѓС€",
-    unloadInShaidon: "Р‘РѕР·РѕСЂРё РєСѓС…РЅР°",
+    name: "Ахлиддин",
+    collectInShaidon: "Гаражи Зариф (кумур фуруш)",
+    unloadInShaidon: "Бозори кухна",
   },
   2: {
-    name: "РђСЃР»РёРґРґРёРЅ",
-    collectInShaidon: "РЎРµ РєСѓС‡Р°РіРё Р»Р°Р±Рё СЃРѕР№",
-    unloadInShaidon: "РЎРµ РєСѓС‡Р°РіРё Р»Р°Р±Рё СЃРѕР№",
+    name: "Аслиддин",
+    collectInShaidon: "Се кучаги лаби сой",
+    unloadInShaidon: "Се кучаги лаби сой",
   },
   3: {
-    name: "Р”Р¶Р°РјС€РµРґ",
-    collectInShaidon: "РќР°Р·РґРё РђР·РёР·С…СѓС‡Р°",
-    unloadInShaidon: "РќР°Р·РґРё РђР·РёР·С…СѓС‡Р°",
+    name: "Джамшед",
+    collectInShaidon: "Назди Азизхуча",
+    unloadInShaidon: "Назди Азизхуча",
   },
   4: {
-    name: "Р­СЂР°С‡",
-    collectInShaidon: "РҐРѕРЅР°Рё Р­СЂР°С‡",
-    unloadInShaidon: "РҐРѕРЅР°Рё Р­СЂР°С‡",
+    name: "Эрач",
+    collectInShaidon: "Хонаи Эрач",
+    unloadInShaidon: "Хонаи Эрач",
   },
 };
 
@@ -65,13 +99,13 @@ function isMissingCollectUntilColumnError(error) {
 }
 
 const TEXT = {
-  configureSupabase: "РЎРЅР°С‡Р°Р»Р° РІСЃС‚Р°РІСЊС‚Рµ Supabase URL Рё publishable key РІ С„Р°Р№Р» supabase.js.",
-  noUpdate: "РќРµС‚ РѕР±РЅРѕРІР»РµРЅРёСЏ",
-  noData: "РќРµС‚ РґР°РЅРЅС‹С…",
-  fresh: "РЎРІРµР¶Рѕ",
-  warning: "РќСѓР¶РЅРѕ РѕР±РЅРѕРІРёС‚СЊ",
-  stale: "РЎС‚Р°СЂРѕРµ РѕР±РЅРѕРІР»РµРЅРёРµ",
-  collectUntilNoDate: "РќРµ СѓРєР°Р·Р°РЅРѕ",
+  configureSupabase: "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
+  noUpdate: "Нет обновления",
+  noData: "Нет данных",
+  fresh: "Свежо",
+  warning: "Нужно обновить",
+  stale: "Старое обновление",
+  collectUntilNoDate: "Не указано",
 };
 
 const isConfigured =
@@ -86,7 +120,6 @@ export const supabase = isConfigured
       },
     })
   : null;
-
 
 export function formatCollectUntil(value) {
   if (!value) {
@@ -111,13 +144,13 @@ export function getDriverProfile(driverOrNumber) {
 
 export function getDriverDisplayName(driver) {
   const profile = getDriverProfile(driver);
-  const rawName = driver?.name?.trim();
+  const rawName = repairBrokenCyrillic(driver?.name?.trim());
 
   if (profile?.name) {
     return profile.name;
   }
 
-  if (rawName && !/^Р’РѕРґРёС‚РµР»СЊ\s+\d+$/i.test(rawName)) {
+  if (rawName && !/^Водитель\s+\d+$/i.test(rawName)) {
     return rawName;
   }
 
@@ -137,29 +170,30 @@ export function getLocationTemplateGroups(driver) {
   }
 
   const groups = [
-    { label: "Р РѕСЃСЃРёСЏ", options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT] },
-    { label: "РњР°СЂС€СЂСѓС‚", options: ROUTE_POINTS },
+    { label: "Россия", options: [RUSSIA_COLLECT_POINT, RUSSIA_UNLOAD_POINT] },
+    { label: "Маршрут", options: ROUTE_POINTS },
   ];
 
   if (shaidonOptions.length) {
-    groups.push({ label: "РЁР°Р№РґРѕРЅ / С‚РѕС‡РєР° РІРѕРґРёС‚РµР»СЏ", options: shaidonOptions });
+    groups.push({ label: "Шайдон / точка водителя", options: shaidonOptions });
   }
 
   return groups;
 }
 
 export function getDefaultTemplateForStatus(status, driver) {
+  const normalizedStatus = normalizeStatus(status);
   const profile = getDriverProfile(driver);
 
-  if (status === STATUS_COLLECTING_IN_RUSSIA) {
+  if (normalizedStatus === STATUS_COLLECTING_IN_RUSSIA) {
     return RUSSIA_COLLECT_POINT;
   }
 
-  if (status === STATUS_UNLOADING) {
+  if (normalizedStatus === STATUS_UNLOADING) {
     return profile?.unloadInShaidon ?? "";
   }
 
-  if (status === STATUS_IN_SHAIDON) {
+  if (normalizedStatus === STATUS_IN_SHAIDON) {
     return profile?.collectInShaidon ?? "";
   }
 
@@ -189,6 +223,14 @@ export function isAdminModeRequested() {
 
 export function buildDriverPageLink(driver) {
   return `./driver.html?driver_number=${driver.number}`;
+}
+
+function normalizeDriverStatusRecord(item) {
+  return {
+    ...item,
+    status: normalizeStatus(item.status),
+    location_text: repairBrokenCyrillic(item.location_text),
+  };
 }
 
 export async function fetchDrivers() {
@@ -238,7 +280,7 @@ export async function fetchDrivers() {
 
   const statusesByDriverId = new Map();
 
-  for (const item of statusesResult.data ?? []) {
+  for (const item of (statusesResult.data ?? []).map(normalizeDriverStatusRecord)) {
     if (!statusesByDriverId.has(item.driver_id)) {
       statusesByDriverId.set(item.driver_id, item);
     }
@@ -246,6 +288,7 @@ export async function fetchDrivers() {
 
   return (driversResult.data ?? []).map((driver) => ({
     ...driver,
+    name: repairBrokenCyrillic(driver.name),
     current_status: statusesByDriverId.get(driver.id) ?? null,
   }));
 }
