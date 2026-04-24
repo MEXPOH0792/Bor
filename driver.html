@@ -18,8 +18,11 @@
   <body>
     <div class="page-shell page-shell-narrow">
       <header class="hero hero-compact hero-unified">
-        <p class="eyebrow">Для водителей</p>
-        <h1>Обновить свой статус</h1>
+        <p class="eyebrow">Для водителей и координатора</p>
+        <h1 id="heroTitle">Обновить статус</h1>
+        <p id="heroText" class="hero-text">
+          Обновите статус, место и дату. При слабом интернете данные можно сохранить на этом устройстве и отправить позже.
+        </p>
         <section id="connectionBanner" class="hero-note hero-note-warning hidden" role="status"></section>
         <section id="queuePanel" class="hero-note hero-note-warning hidden" role="status">
           <div class="queue-panel-row queue-panel-row-compact">
@@ -34,22 +37,23 @@
       </header>
 
       <main>
+        <section id="driverErrorBanner" class="panel panel-error hidden" role="alert"></section>
 
         <section id="adminPanel" class="panel hidden" aria-live="polite">
           <div class="panel-row">
             <div>
-              <h2>Режим координатора</h2>
-              <p class="muted">Здесь можно быстро открыть личную ссылку любого водителя.</p>
+              <h2>Координатор</h2>
+              <p class="muted">
+                Все 3 водителя на одном экране. Меняйте статус и место по каждой карточке отдельно.
+              </p>
             </div>
           </div>
-          <div id="driverLinks" class="admin-links"></div>
+          <div id="adminForms" class="admin-driver-grid"></div>
         </section>
 
-        <section id="driverErrorBanner" class="panel panel-error hidden" role="alert"></section>
-
-        <section class="panel">
+        <section id="personalSection" class="panel">
           <form id="driverForm" class="driver-form">
-            <label class="field">
+            <label id="driverField" class="field">
               <span>Водитель</span>
               <select id="driverSelect" required>
                 <option value="">Выберите себя</option>
@@ -68,22 +72,32 @@
 
             <label class="field">
               <span>Местоположение</span>
-              <input id="locationInput" type="text" placeholder="Например, Казахстан, трасса" maxlength="120" required />
+              <input
+                id="locationInput"
+                type="text"
+                placeholder="Например, Казахстан, трасса"
+                maxlength="120"
+                required
+              />
             </label>
 
             <label class="field">
-              <span>ба рох мебароем</span>
+              <span>Сбор до даты</span>
               <input id="collectUntilInput" type="date" />
             </label>
 
             <div class="geo-panel">
               <button id="geoButton" class="button button-secondary" type="button">Взять геолокацию</button>
-              <p id="geoStatus" class="muted">Координаты не выбраны. Можно отправить только текстовое место.</p>
+              <p id="geoStatus" class="muted">
+                Координаты не выбраны. Можно отправить только текстовое место.
+              </p>
             </div>
 
             <div class="driver-actions">
               <button id="submitButton" class="button button-primary button-wide" type="submit">Обновить</button>
-              <p id="submitHint" class="submit-hint muted">При слабом интернете обновление сначала сохранится на устройстве.</p>
+              <p id="submitHint" class="submit-hint muted">
+                При слабом интернете обновление сначала сохранится на устройстве.
+              </p>
               <a class="button button-secondary" href="./index.html">Открыть клиентскую страницу</a>
             </div>
           </form>
