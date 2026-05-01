@@ -1,5 +1,3 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2?target=es2020";
-
 export const SUPABASE_URL = "https://wfagftibcjlouxftzevc.supabase.co";
 export const SUPABASE_ANON_KEY = "sb_publishable_y3kAiWOXJWjPwHFidUYA1A_inltPpUL";
 
@@ -36,6 +34,98 @@ export const STATUS_LABELS = {
   [STATUS_UNLOADING]: "бор таксим карсос",
   [STATUS_OFFLINE]: "не на связи",
 };
+
+const TEXT = {
+  configureSupabase: "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
+  noUpdate: "Нет обновления",
+  noData: "Нет данных",
+  fresh: "Свежо",
+  warning: "Нужно обновить",
+  stale: "Старое обновление",
+  collectUntilNoDate: "Не указано",
+};
+
+const isConfigured =
+  SUPABASE_URL !== "PASTE_YOUR_SUPABASE_URL" &&
+  SUPABASE_ANON_KEY !== "PASTE_YOUR_SUPABASE_ANON_KEY";
+
+const REST_URL = `${SUPABASE_URL}/rest/v1`;
+
+function getSupabaseHeaders(extraHeaders = {}) {
+  return {
+    apikey: SUPABASE_ANON_KEY,
+    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+    ...extraHeaders,
+  };
+}
+
+async function parseSupabaseResponse(response) {
+  const text = await response.text();
+  let data = null;
+
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+
+  if (!response.ok) {
+    return {
+      data: null,
+      error: {
+        status: response.status,
+        message: data?.message || data?.hint || String(data || response.statusText),
+        details: data?.details,
+        code: data?.code,
+      },
+    };
+  }
+
+  return { data, error: null };
+}
+
+async function supabaseGet(table, params) {
+  const url = new URL(`${REST_URL}/${table}`);
+  Object.entries(params).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+
+  try {
+    const response = await fetch(url, {
+      method: "GET",
+      headers: getSupabaseHeaders({
+        Accept: "application/json",
+      }),
+    });
+
+    return await parseSupabaseResponse(response);
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+async function supabaseRpc(functionName, payload) {
+  try {
+    const response = await fetch(`${REST_URL}/rpc/${functionName}`, {
+      method: "POST",
+      headers: getSupabaseHeaders({
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      }),
+      body: JSON.stringify(payload),
+    });
+
+    return await parseSupabaseResponse(response);
+  } catch (error) {
+    return { data: null, error };
+  }
+}
+
+export const supabase = isConfigured
+  ? {
+      rpc: supabaseRpc,
+    }
+  : null;
 
 export function repairBrokenCyrillic(value) {
   if (typeof value !== "string" || !value) {
@@ -97,29 +187,6 @@ function isMissingCollectUntilColumnError(error) {
   const message = String(error?.message || "");
   return /collect_until_date/i.test(message) && /(column|schema cache|does not exist)/i.test(message);
 }
-
-const TEXT = {
-  configureSupabase: "Сначала вставьте Supabase URL и publishable key в файл supabase.js.",
-  noUpdate: "Нет обновления",
-  noData: "Нет данных",
-  fresh: "Свежо",
-  warning: "Нужно обновить",
-  stale: "Старое обновление",
-  collectUntilNoDate: "Не указано",
-};
-
-const isConfigured =
-  SUPABASE_URL !== "PASTE_YOUR_SUPABASE_URL" &&
-  SUPABASE_ANON_KEY !== "PASTE_YOUR_SUPABASE_ANON_KEY";
-
-export const supabase = isConfigured
-  ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    })
-  : null;
 
 export function formatCollectUntil(value) {
   if (!value) {
@@ -236,32 +303,26 @@ function normalizeDriverStatusRecord(item) {
 export async function fetchDrivers() {
   assertSupabaseConfigured();
 
-  const driversResult = await supabase
-    .from("drivers")
-    .select("id, number, name, phone, is_active")
-    .eq("is_active", true)
-    .order("number", { ascending: true });
+  const driversResult = await supabaseGet("drivers", {
+    select: "id,number,name,phone,is_active",
+    is_active: "eq.true",
+    order: "number.asc",
+  });
 
   if (driversResult.error) {
     throw driversResult.error;
   }
 
-  let statusesResult = await supabase
-    .from("driver_status")
-    .select(
-      "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at, collect_until_date"
-    )
-    .order("updated_at", { ascending: false })
-    .order("id", { ascending: false });
+  let statusesResult = await supabaseGet("driver_status", {
+    select: "id,driver_id,status,location_text,lat,lon,is_collecting_in_russia,updated_at,collect_until_date",
+    order: "updated_at.desc,id.desc",
+  });
 
   if (isMissingCollectUntilColumnError(statusesResult.error)) {
-    statusesResult = await supabase
-      .from("driver_status")
-      .select(
-        "id, driver_id, status, location_text, lat, lon, is_collecting_in_russia, updated_at"
-      )
-      .order("updated_at", { ascending: false })
-      .order("id", { ascending: false });
+    statusesResult = await supabaseGet("driver_status", {
+      select: "id,driver_id,status,location_text,lat,lon,is_collecting_in_russia,updated_at",
+      order: "updated_at.desc,id.desc",
+    });
 
     if (!statusesResult.error) {
       statusesResult = {
